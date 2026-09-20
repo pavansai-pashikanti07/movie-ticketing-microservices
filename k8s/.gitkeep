@@ -1,0 +1,2 @@
+# Kubernetes & Helm Directory
+Manifests and Helm charts for deploying CinePass microservices to AWS EKS.

@@ -1,0 +1,2 @@
+# Terraform Infrastructure Directory
+Modules for VPC, EKS, ECR, RDS, and ElastiCache.
