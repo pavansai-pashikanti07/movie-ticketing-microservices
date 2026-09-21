@@ -39,6 +39,31 @@ module "eks" {
   # Adds caller identity as cluster administrator via access entries
   enable_cluster_creator_admin_permissions = true
 
+  access_entries = {
+    pavan_admin = {
+      principal_arn = "arn:aws:iam::304960798044:user/Pavan"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+    root_admin = {
+      principal_arn = "arn:aws:iam::304960798044:root"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
+
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.public_subnets
 
@@ -127,6 +152,7 @@ module "iam" {
 module "cloudfront" {
   source = "../../modules/cloudfront"
 
+  enabled                     = var.enable_cloudfront
   bucket_id                   = module.s3_assets.bucket_id
   bucket_arn                  = module.s3_assets.bucket_arn
   bucket_regional_domain_name = module.s3_assets.bucket_regional_domain_name

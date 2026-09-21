@@ -18,3 +18,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enabled" {
+  description = "Whether to create CloudFront distribution (set false if AWS account is unverified)"
+  type        = bool
+  default     = false
+}

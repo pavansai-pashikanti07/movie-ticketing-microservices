@@ -50,13 +50,19 @@ variable "kubernetes_version" {
 variable "instance_types" {
   description = "Instance types for EKS worker nodes"
   type        = list(string)
-  default     = ["t3.medium", "t3a.medium"]
+  default     = ["t3.medium"]
 }
 
 variable "capacity_type" {
   description = "Capacity type for worker nodes (SPOT or ON_DEMAND)"
   type        = string
   default     = "SPOT"
+}
+
+variable "enable_cloudfront" {
+  description = "Enable CloudFront distribution (set false if AWS account is unverified)"
+  type        = bool
+  default     = false
 }
 
 variable "ecr_repositories" {
