@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CinePass Enterprise | Next-Gen Movie Ticketing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Global Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <span class="logo-icon">🎟️</span>
+        <span class="logo-text">CINE<span class="highlight">PASS</span></span>
+        <span class="badge-k8s">EKS LIVE</span>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="movieSearch" placeholder="Search movies, theaters, genres...">
+      </div>
+
+      <div class="nav-actions">
+        <div class="location-picker">
+          <span>📍</span>
+          <select id="citySelect">
+            <option>Hyderabad</option>
+            <option>Bengaluru</option>
+            <option>Mumbai</option>
+            <option>Chennai</option>
+          </select>
+        </div>
+        <button class="btn-microservices" id="btnClusterHealth">
+          <span class="pulse-dot"></span>
+          Cluster Health
+        </button>
+        <div class="user-profile">
+          <div class="avatar">P</div>
+          <span class="user-name">Pavan Charan</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Blockbuster Spotlight -->
+  <section class="hero-section">
+    <div class="hero-backdrop"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🔥 BLOCKBUSTER OF THE WEEK</div>
+      <h1 class="hero-title">DEVARA: PART 1</h1>
+      <p class="hero-meta">
+        <span class="rating">⭐ 9.2/10 (124K Votes)</span>
+        <span class="dot">•</span>
+        <span class="cert">UA 16+</span>
+        <span class="dot">•</span>
+        <span class="duration">2h 58m</span>
+        <span class="dot">•</span>
+        <span class="format-badge">IMAX 3D</span>
+        <span class="format-badge">4K DOLBY ATMOS</span>
+      </p>
+      <p class="hero-desc">
+        A fearless coastal warrior embarks on a treacherous journey into unchartered waters to protect his people against rogue factions in this epic oceanic high-octane thriller.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="openBookingModal('m1')">
+          <span>🎟️</span> Book Tickets Now
+        </button>
+        <button class="btn-secondary" onclick="alert('Playing 4K IMAX Trailer...')">
+          <span>▶️</span> Watch Trailer
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Movies Filter & Catalog Section -->
+  <main class="catalog-section">
+    <div class="catalog-header">
+      <div>
+        <h2 class="section-title">Now Showing in Theaters</h2>
+        <p class="section-subtitle">Experience movies on Hyderabad's biggest IMAX & 4K screens</p>
+      </div>
+      <div class="filter-tabs">
+        <button class="tab-btn active" data-genre="all">All Movies</button>
+        <button class="tab-btn" data-genre="Action">Action</button>
+        <button class="tab-btn" data-genre="Sci-Fi">Sci-Fi</button>
+        <button class="tab-btn" data-genre="Drama">Drama</button>
+      </div>
+    </div>
+
+    <div class="movies-grid" id="moviesGrid">
+      <!-- Injected by app.js -->
+    </div>
+  </main>
+
+  <!-- Interactive Theater Booking Modal -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="modal-container">
+      <button class="modal-close" onclick="closeBookingModal()">✕</button>
+
+      <div class="booking-header">
+        <div>
+          <span class="tag-live">LIVE EKS SEAT LOCKING</span>
+          <h2 id="modalMovieTitle">Movie Name</h2>
+          <p id="modalMovieMeta">IMAX 3D • 2h 45m • Telugu / English</p>
+        </div>
+        <div class="lock-timer-box" id="timerBox">
+          <span class="timer-icon">⏳</span>
+          <div>
+            <div class="timer-label">Seat Lock Timer</div>
+            <div class="timer-value" id="lockTimer">05:00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: Multiplex & Showtime -->
+      <div class="selector-row">
+        <div class="selector-group">
+          <label>Select Multiplex Theater</label>
+          <select id="theaterSelect" class="custom-select" onchange="renderSeats()">
+            <option value="t1">AMB Cinemas: Gachibowli (Screen 1 - Laser IMAX)</option>
+            <option value="t2">Prasads Multiplex: Necklace Road (Large Screen 6)</option>
+            <option value="t3">PVR Inorbit Mall: Cyberabad (Dolby Atmos Screen 3)</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label>Showtime (Today)</label>
+          <div class="showtime-pills">
+            <button class="time-pill active" onclick="selectShowtime(this)">11:00 AM</button>
+            <button class="time-pill" onclick="selectShowtime(this)">02:30 PM</button>
+            <button class="time-pill" onclick="selectShowtime(this)">06:15 PM</button>
+            <button class="time-pill" onclick="selectShowtime(this)">09:45 PM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: 3D Cinema Curved Screen & Seat Matrix -->
+      <div class="cinema-hall">
+        <div class="screen-wrapper">
+          <div class="cinema-screen"></div>
+          <div class="screen-label">ALL EYES THIS WAY • CINEMA SCREEN</div>
+        </div>
+
+        <div class="seat-map-container" id="seatMap">
+          <!-- Injected via app.js -->
+        </div>
+
+        <div class="seat-legend">
+          <div class="legend-item"><span class="seat-sample available"></span> Available</div>
+          <div class="legend-item"><span class="seat-sample selected"></span> Selected</div>
+          <div class="legend-item"><span class="seat-sample locked"></span> In Hold (Other User)</div>
+          <div class="legend-item"><span class="seat-sample booked"></span> Booked</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Checkout Bar -->
+      <div class="booking-footer">
+        <div class="selection-summary">
+          <div>
+            <span class="muted-label">Selected Seats:</span>
+            <span class="selected-seats-badge" id="selectedSeatsText">None</span>
+          </div>
+          <div class="total-price-box">
+            <span class="muted-label">Total Amount:</span>
+            <span class="price-val" id="totalPrice">₹0</span>
+          </div>
+        </div>
+        <button class="btn-checkout" id="btnCheckout" onclick="proceedToCheckout()" disabled>
+          Proceed to Payment & Buy ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Digital Boarding Pass Ticket Confirmation Modal -->
+  <div class="modal-overlay" id="ticketModal">
+    <div class="ticket-card">
+      <div class="ticket-top">
+        <div class="ticket-brand">
+          <span class="brand-logo">🎟️ CINEPASS</span>
+          <span class="ticket-chip">CONFIRMED PASS</span>
+        </div>
+        <h2 class="ticket-movie" id="ticketMovie">DEVARA: PART 1</h2>
+        <p class="ticket-theater" id="ticketTheater">AMB Cinemas: Gachibowli</p>
+      </div>
+
+      <div class="ticket-divider">
+        <div class="notch left"></div>
+        <div class="dashed-line"></div>
+        <div class="notch right"></div>
+      </div>
+
+      <div class="ticket-details">
+        <div class="ticket-row">
+          <div>
+            <span class="ticket-lbl">DATE</span>
+            <span class="ticket-val" id="ticketDate">Today</span>
+          </div>
+          <div>
+            <span class="ticket-lbl">TIME</span>
+            <span class="ticket-val" id="ticketTime">06:15 PM</span>
+          </div>
+          <div>
+            <span class="ticket-lbl">SEATS</span>
+            <span class="ticket-val highlight" id="ticketSeats">C4, C5</span>
+          </div>
+        </div>
+
+        <div class="ticket-row">
+          <div>
+            <span class="ticket-lbl">BOOKING REF</span>
+            <span class="ticket-val font-mono" id="ticketRef">CP-892401</span>
+          </div>
+          <div>
+            <span class="ticket-lbl">TOTAL PAID</span>
+            <span class="ticket-val" id="ticketPaid">₹590</span>
+          </div>
+          <div>
+            <span class="ticket-lbl">STATUS</span>
+            <span class="ticket-val text-green">PAID & SQS SYNCED</span>
+          </div>
+        </div>
+
+        <div class="ticket-qr-section">
+          <div class="qr-code-box">
+            <svg viewBox="0 0 100 100" class="qr-svg">
+              <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
+              <rect x="10" y="10" width="25" height="25" fill="#000000" />
+              <rect x="15" y="15" width="15" height="15" fill="#ffffff" />
+              <rect x="18" y="18" width="9" height="9" fill="#000000" />
+              <rect x="65" y="10" width="25" height="25" fill="#000000" />
+              <rect x="70" y="15" width="15" height="15" fill="#ffffff" />
+              <rect x="73" y="18" width="9" height="9" fill="#000000" />
+              <rect x="10" y="65" width="25" height="25" fill="#000000" />
+              <rect x="15" y="70" width="15" height="15" fill="#ffffff" />
+              <rect x="18" y="73" width="9" height="9" fill="#000000" />
+              <rect x="42" y="15" width="8" height="8" fill="#000000" />
+              <rect x="42" y="35" width="15" height="8" fill="#000000" />
+              <rect x="25" y="42" width="12" height="10" fill="#000000" />
+              <rect x="65" y="45" width="15" height="8" fill="#000000" />
+              <rect x="45" y="65" width="10" height="12" fill="#000000" />
+              <rect x="65" y="65" width="20" height="15" fill="#000000" />
+            </svg>
+          </div>
+          <div class="qr-info">
+            <p>Scan this QR code at cinema turnstile gate for direct entry.</p>
+            <span class="sms-badge">📩 SMS & S3 E-Ticket Dispatched via SQS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-actions">
+        <button class="btn-primary full-width" onclick="closeTicketModal()">
+          <span>✅</span> Done & Book Another
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cluster Health Telemetry Drawer -->
+  <div class="drawer-overlay" id="clusterDrawer">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h3>🚀 CinePass EKS Microservices Mesh</h3>
+        <button class="drawer-close" onclick="toggleClusterDrawer()">✕</button>
+      </div>
+      <div class="service-cards-list" id="servicesStatusList">
+        <!-- Injected via app.js -->
+      </div>
+      <div class="cluster-summary-box">
+        <div class="summary-line"><span>Region:</span> <strong>ap-south-2 (Hyderabad)</strong></div>
+        <div class="summary-line"><span>EKS Nodes:</span> <strong>2 x t3.small (Spot Free-Tier)</strong></div>
+        <div class="summary-line"><span>Database:</span> <strong>RDS PostgreSQL (Encrypted SSL)</strong></div>
+        <div class="summary-line"><span>Distributed Cache:</span> <strong>AWS ElastiCache Redis</strong></div>
+        <div class="summary-line"><span>Event Bus:</span> <strong>AWS SQS Booking Queue</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 CinePass Enterprise Microservices. Built with AWS EKS, RDS, ElastiCache, SQS & Terraform.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

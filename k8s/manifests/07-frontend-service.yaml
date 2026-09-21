@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-service
+  namespace: cinepass-dev
+  labels:
+    app: frontend-service
+    app.kubernetes.io/part-of: cinepass
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend-service
+  template:
+    metadata:
+      labels:
+        app: frontend-service
+    spec:
+      containers:
+        - name: frontend-service
+          image: nginx:alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
+          volumeMounts:
+            - name: html-volume
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html-volume
+          configMap:
+            name: cinepass-frontend-assets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: cinepass-dev
+  labels:
+    app: frontend-service
+    app.kubernetes.io/part-of: cinepass
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend-service
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
