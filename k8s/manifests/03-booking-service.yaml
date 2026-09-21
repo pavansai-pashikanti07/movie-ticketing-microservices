@@ -31,7 +31,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: booking-service
-          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass-booking-service:latest
+          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass/booking-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8082

@@ -20,8 +20,8 @@ permissions:
 env:
   AWS_REGION: ap-south-2
   ROLE_TO_ASSUME: arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role
-  ECR_REPOSITORY: cinepass-notification-service
-  EKS_CLUSTER_NAME: cinepass-dev-cluster
+  ECR_REPOSITORY: cinepass/notification-service
+  EKS_CLUSTER_NAME: cinepass-dev-eks
   SERVICE_DIR: services/notification-service
 
 jobs:

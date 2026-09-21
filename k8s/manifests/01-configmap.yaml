@@ -11,17 +11,17 @@ data:
   AWS_REGION: "ap-south-2"
   
   # Database Non-Sensitive Endpoints
-  DB_HOST: "cinepass-dev-db.cbgayocyy127.ap-south-2.rds.amazonaws.com"
+  DB_HOST: "cinepass-dev-postgres.chis0ucuosxf.ap-south-2.rds.amazonaws.com"
   DB_PORT: "5432"
-  DB_NAME: "cinepass"
-  DB_USER: "cinepass_admin"
+  DB_NAME: "cinepass_db"
+  DB_USER: "postgres"
 
   # Redis Non-Sensitive Endpoints
-  REDIS_HOST: "cinepass-dev-redis.cbgayocyy127.ap-south-2.cache.amazonaws.com"
+  REDIS_HOST: "cinepass-dev-redis-redis.wvth1k.0001.aps2.cache.amazonaws.com"
   REDIS_PORT: "6379"
 
-  # CloudFront CDN & S3 Assets
-  CLOUDFRONT_DOMAIN: "https://assets.cinepass.com"
+  # CloudFront CDN & S3 Assets (Using regional S3 domain for Free-Tier)
+  CLOUDFRONT_DOMAIN: "https://cinepass-assets-07784.s3.ap-south-2.amazonaws.com"
   S3_BUCKET_NAME: "cinepass-assets-07784"
 
   # AWS SQS Queues

@@ -33,7 +33,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: notification-service
-          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass-notification-service:latest
+          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass/notification-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8084

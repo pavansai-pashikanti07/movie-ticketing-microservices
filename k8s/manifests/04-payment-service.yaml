@@ -33,7 +33,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: payment-service
-          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass-payment-service:latest
+          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass/payment-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8083

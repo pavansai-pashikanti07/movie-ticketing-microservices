@@ -8,21 +8,21 @@ global:
 
 # Common Database & Caching Connections
 database:
-  host: cinepass-dev-db.cbgayocyy127.ap-south-2.rds.amazonaws.com
+  host: cinepass-dev-postgres.chis0ucuosxf.ap-south-2.rds.amazonaws.com
   port: 5432
-  user: cinepass_admin
-  name: cinepass
+  user: postgres
+  name: cinepass_db
   passwordSecretName: cinepass-dev-credentials
   passwordKey: DB_PASSWORD
 
 redis:
-  host: cinepass-dev-redis.cbgayocyy127.ap-south-2.cache.amazonaws.com
+  host: cinepass-dev-redis-redis.wvth1k.0001.aps2.cache.amazonaws.com
   port: 6379
 
 aws:
   sqsQueueUrl: https://sqs.ap-south-2.amazonaws.com/304960798044/cinepass-dev-booking-queue
   s3BucketName: cinepass-assets-07784
-  cloudfrontDomain: https://assets.cinepass.com
+  cloudfrontDomain: https://cinepass-assets-07784.s3.ap-south-2.amazonaws.com
   iamRoles:
     appServices: arn:aws:iam::304960798044:role/cinepass-dev-app-services-role
     externalSecrets: arn:aws:iam::304960798044:role/cinepass-dev-external-secrets-role
