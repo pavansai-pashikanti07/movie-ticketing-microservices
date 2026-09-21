@@ -1,0 +1,90 @@
+# ==============================================================================
+# ⚠️ ARCHITECTURAL REFERENCE ONLY - DO NOT APPLY TO FREE TIER DEV CLUSTER
+# ==============================================================================
+# This manifest illustrates how an enterprise ticketing platform (like BookMyShow
+# or Fandango) provisions Just-In-Time (JIT) compute instances for flash sales.
+# In our free-tier dev environment, we DO NOT apply this to avoid accidental
+# EC2 provisioning charges (keeping AWS bills under ₹40-₹50).
+# ==============================================================================
+
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: cinepass-spot-nodepool
+  labels:
+    app.kubernetes.io/part-of: cinepass
+spec:
+  # Reference to AWS-specific configuration
+  template:
+    metadata:
+      labels:
+        role: cinepass-worker
+        workload: high-concurrency
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: cinepass-node-class
+      # Fast JIT compute requirements
+      requirements:
+        - key: "karpenter.k8s.aws/instance-category"
+          operator: In
+          values: ["c", "m", "t"] # Compute-optimized & General purpose for high-concurrency ticketing
+        - key: "karpenter.k8s.aws/instance-generation"
+          operator: Gt
+          values: ["2"]
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ["spot", "on-demand"] # Prioritize Spot for 70% cost savings, fallback to on-demand
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+        - key: "topology.kubernetes.io/zone"
+          operator: In
+          values: ["ap-south-2a", "ap-south-2b", "ap-south-2c"]
+
+  # Limits to prevent cloud cost runaway during load testing
+  limits:
+    cpu: "64"
+    memory: 256Gi
+
+  # Automatic consolidation and scaling down after flash sale ends
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s # Rapidly reclaim unused Spot nodes after flash sale
+    expireAfter: 720h     # 30 days node recycling for security patching
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: cinepass-node-class
+  labels:
+    app.kubernetes.io/part-of: cinepass
+spec:
+  amiFamily: AL2023 # Amazon Linux 2023 for Kubernetes v1.31
+  role: "KarpenterNodeRole-cinepass-dev-cluster"
+  
+  # Auto-discover VPC subnets and security groups tagged with cluster name
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: cinepass-dev-cluster
+  
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: cinepass-dev-cluster
+
+  # Ephemeral storage attached to each node
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 50Gi
+        volumeType: gp3
+        iops: 3000
+        throughput: 125
+        encrypted: true
+        deleteOnTermination: true
+
+  tags:
+    Project: cinepass
+    Environment: dev
+    ManagedBy: karpenter
