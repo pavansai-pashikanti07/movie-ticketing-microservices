@@ -60,6 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -72,7 +75,6 @@ jobs:
         with:
           role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
 
       - name: Log in to Amazon ECR
         id: login-ecr
