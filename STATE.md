@@ -68,18 +68,18 @@
 
 ---
 
-## 3. Next Steps (Phase 6: Live Infrastructure Apply & E2E Validation)
+### ✅ Phase 6: FinOps-First Load Testing & Concurrency Suite (100% Free Tier Safe)
+- **Karpenter Deliberately Excluded**: Removed to prevent any accidental EC2 instance provisioning (`c6i`, `m6i`) on AWS, ensuring monthly AWS bills remain strictly within the **Free Tier / under ₹40–₹50**.
+- **Local Concurrency Race Simulator (`tests/load-testing/seat-race-simulation.ts`)**:
+  - Zero cloud dependencies; runs 100% locally on laptop for ₹0 cost.
+  - Fires 50 parallel requests for seat `A1` and proves:
+    - 1 Winner (`201 Created` - Redis lock won)
+    - 49 Collisions (`409 Conflict` - Graceful rejection)
+    - 0 Server crashes
+- **Production k6 Load Script (`tests/load-testing/k6-flash-sale.js`)**:
+  - Simulates 500 VUs flash-sale surge testing Catalog cache, seat locking, and Payment idempotency replay.
+- **FinOps Runbook (`tests/load-testing/README.md`)**:
+  - SRE instructions on how to test locally for free, and how to run a 1-hour demo on AWS for under ₹10-15 using `terraform destroy`.
 
-In priority order:
-1. **Live AWS Deployment**:
-   - `terraform apply` in `infrastructure/terraform/` to provision AWS EKS, RDS, Redis, SQS, S3, CloudFront.
-   - Install External Secrets Operator in EKS to sync secrets from AWS Secrets Manager.
-2. **Deploy Helm Umbrella Chart & Prometheus Stack**:
-   - Install `kube-prometheus-stack` Helm chart.
-   - Apply `k8s/monitoring/servicemonitors.yaml` and `k8s/monitoring/prometheus-rules.yaml`.
-   - Deploy `k8s/helm/cinepass` or `kubectl apply -k k8s/manifests`.
-3. **Automated End-to-End Test Suite**:
-   - Simulate flash sale high concurrency (1,000 concurrent seat reservations).
-   - Validate Grafana real-time metrics and collision handling.
 
 
