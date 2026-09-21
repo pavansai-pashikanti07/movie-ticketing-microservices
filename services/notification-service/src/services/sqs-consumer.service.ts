@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { PdfService, TicketPdfInput } from './pdf.service';
 import { S3Service } from './s3.service';
 import { pool } from '../config/db';
+import { sqsMessagesConsumedTotal, pdfGenerationDurationSeconds } from '../utils/metrics';
 
 dotenv.config();
 
@@ -87,7 +88,10 @@ export class SqsConsumerService {
         customerEmail: event.userEmail,
       };
 
+      const pdfStart = process.hrtime();
       const pdfBuffer = await PdfService.generateTicketPdf(pdfInput);
+      const pdfDiff = process.hrtime(pdfStart);
+      pdfGenerationDurationSeconds.observe(pdfDiff[0] + pdfDiff[1] / 1e9);
 
       // 2. Upload PDF to Amazon S3 Bucket
       const ticketPdfUrl = await S3Service.uploadTicketPdf(event.bookingId, pdfBuffer);
@@ -115,7 +119,10 @@ export class SqsConsumerService {
         );
         console.log(`[SQSConsumer] Acknowledged and deleted message: ${message.MessageId}`);
       }
+
+      sqsMessagesConsumedTotal.inc({ status: 'success' });
     } catch (error) {
+      sqsMessagesConsumedTotal.inc({ status: 'failure' });
       console.error('[SQSConsumer] Error processing message (message will be retried or moved to DLQ):', error);
     }
   }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { pool } from '../config/db';
 import { getCache, setCache, invalidateCache, checkRedisHealth } from '../config/redis';
+import { cacheHitsTotal, cacheMissesTotal } from '../utils/metrics';
 
 // Validation Schemas
 const createMovieSchema = z.object({
@@ -38,6 +39,7 @@ export const getMovies = async (req: Request, res: Response): Promise<void> => {
     // 1. Check Redis Cache
     const cachedData = await getCache<any[]>(cacheKey);
     if (cachedData) {
+      cacheHitsTotal.inc();
       res.status(200).json({
         success: true,
         source: 'cache',
@@ -46,6 +48,8 @@ export const getMovies = async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
+
+    cacheMissesTotal.inc();
 
     // 2. Query PostgreSQL
     let query = 'SELECT * FROM movies WHERE is_active = true';

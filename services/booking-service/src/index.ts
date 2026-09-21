@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import bookingRoutes from './routes/booking.routes';
 import { initDb, pool } from './config/db';
 import { connectRedis, redis } from './config/redis';
+import { metricsMiddleware, register } from './utils/metrics';
 
 dotenv.config();
 
@@ -22,9 +23,22 @@ app.use(
 );
 app.use(express.json());
 
+// Prometheus Metrics Instrumentation
+app.use(metricsMiddleware);
+
 // Global Kubernetes liveness/readiness probe
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'UP', service: 'booking-service', timestamp: new Date().toISOString() });
+});
+
+// Prometheus Scrape Endpoint
+app.get('/metrics', async (_req: Request, res: Response) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
 });
 
 // Mount Booking Microservice routes

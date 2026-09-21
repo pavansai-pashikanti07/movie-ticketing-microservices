@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { pool } from '../config/db';
 import { SqsService, TicketBookedEventPayload } from '../services/sqs.service';
+import { paymentsTotal, sqsEventsPublishedTotal } from '../utils/metrics';
 
 const processPaymentSchema = z.object({
   bookingId: z.number().int().positive(),
@@ -46,6 +47,7 @@ export const processPayment = async (req: Request, res: Response): Promise<void>
     const existingPaymentRes = await pool.query(existingPaymentQuery, [idempotencyKey]);
 
     if (existingPaymentRes.rows.length > 0) {
+      paymentsTotal.inc({ status: 'idempotent_duplicate' });
       const existing = existingPaymentRes.rows[0];
       console.log(`[Payment:Idempotency] Request replay detected for key: ${idempotencyKey}`);
       res.status(200).json({
@@ -102,6 +104,8 @@ export const processPayment = async (req: Request, res: Response): Promise<void>
     };
 
     const sqsResult = await SqsService.publishTicketBookedEvent(eventPayload);
+    paymentsTotal.inc({ status: 'success' });
+    sqsEventsPublishedTotal.inc({ status: sqsResult.messageId ? 'success' : 'failure' });
 
     // 5. Respond immediately to customer
     res.status(200).json({
@@ -116,6 +120,7 @@ export const processPayment = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
+    paymentsTotal.inc({ status: 'failure' });
     console.error('[PaymentController.processPayment] Error:', error);
     res.status(500).json({ success: false, message: 'Financial ledger error processing payment.' });
   }

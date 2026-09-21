@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { pool } from '../config/db';
 import { SeatLockService } from '../services/seat-lock.service';
 import { checkRedisHealth } from '../config/redis';
+import { bookingAttemptsTotal, seatCollisionsTotal } from '../utils/metrics';
 
 const holdSeatsSchema = z.object({
   showId: z.number().int().positive(),
@@ -32,6 +33,8 @@ export const holdSeats = async (req: Request, res: Response): Promise<void> => {
     `;
     const bookedResult = await pool.query(bookedQuery, [showId, normalizedSeats]);
     if (bookedResult.rows.length > 0) {
+      bookingAttemptsTotal.inc({ status: 'collision' });
+      seatCollisionsTotal.inc();
       const alreadyBooked = bookedResult.rows.map((r) => r.seat_number);
       res.status(409).json({
         success: false,
@@ -46,6 +49,8 @@ export const holdSeats = async (req: Request, res: Response): Promise<void> => {
     const lockResult = await SeatLockService.acquireSeatLocks(showId, normalizedSeats, userId, ttlSeconds);
 
     if (!lockResult.success) {
+      bookingAttemptsTotal.inc({ status: 'collision' });
+      seatCollisionsTotal.inc();
       res.status(409).json({
         success: false,
         message: `Seat '${lockResult.conflictingSeat}' is currently held by another customer. Please select another seat.`,
@@ -53,6 +58,8 @@ export const holdSeats = async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
+
+    bookingAttemptsTotal.inc({ status: 'success' });
 
     // 3. Create PENDING booking in PostgreSQL with expiration timestamp
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000);

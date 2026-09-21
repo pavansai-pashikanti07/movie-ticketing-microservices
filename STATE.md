@@ -51,14 +51,35 @@
 
 ---
 
-## 3. Next Steps (Phase 5: Observability, GitOps & Production Readiness)
+### ✅ Phase 5: Monitoring & Observability Stack (100% Complete & Pushed)
+- **Application Telemetry (`prom-client`) across all 5 Microservices**:
+  - Exposes `/metrics` endpoint with default Node.js runtime metrics (`prefix: cinepass_<svc>_`).
+  - Standard Google SRE Golden Signals: `http_requests_total`, `http_request_duration_seconds` (P50, P95, P99 quantiles).
+  - Domain Business Telemetry:
+    - `booking-service`: `cinepass_booking_seat_collisions_total` & `cinepass_booking_attempts_total`
+    - `catalog-service`: `cinepass_catalog_cache_hits_total` vs `cinepass_catalog_cache_misses_total`
+    - `payment-service`: `cinepass_payments_total{status="success|failure|idempotent_duplicate"}`
+    - `notification-service`: `cinepass_sqs_messages_consumed_total` & `cinepass_pdf_generation_duration_seconds`
+- **Kubernetes Monitoring Manifests (`k8s/monitoring/`)**:
+  - `servicemonitors.yaml`: Prometheus Operator ServiceMonitor scraping all 5 microservices every 15s.
+  - `prometheus-rules.yaml`: Alerting rules (`CinePassHighHttp5xxRate`, `CinePassHighP99Latency`, `CinePassFlashSaleLockContentionSpike`, `CinePassSqsDlqMessagesBacklog`, `CinePassPodFrequentRestarts`).
+  - `dashboards/cinepass-overview.json`: Complete Grafana dashboard JSON (Golden Signals, Flash Sale Heatmap, Pod Saturation).
+  - `README.md`: Operations guide, Prometheus PromQL runbook, and interview preparation questions.
+
+---
+
+## 3. Next Steps (Phase 6: Live Infrastructure Apply & E2E Validation)
 
 In priority order:
-1. **Phase 5: Observability Stack**:
-   - Prometheus ServiceMonitors for scraping Node.js `/metrics`.
-   - Grafana dashboards for booking throughput, Redis lock contention, and SQS queue depth.
-2. **End-to-End Live Deployment & Testing**:
-   - Apply Terraform to AWS environment (`terraform apply`).
-   - Bootstrap External Secrets Operator in EKS cluster.
-   - Run GitHub Actions pipelines to deploy images and verify end-to-end booking flow.
+1. **Live AWS Deployment**:
+   - `terraform apply` in `infrastructure/terraform/` to provision AWS EKS, RDS, Redis, SQS, S3, CloudFront.
+   - Install External Secrets Operator in EKS to sync secrets from AWS Secrets Manager.
+2. **Deploy Helm Umbrella Chart & Prometheus Stack**:
+   - Install `kube-prometheus-stack` Helm chart.
+   - Apply `k8s/monitoring/servicemonitors.yaml` and `k8s/monitoring/prometheus-rules.yaml`.
+   - Deploy `k8s/helm/cinepass` or `kubectl apply -k k8s/manifests`.
+3. **Automated End-to-End Test Suite**:
+   - Simulate flash sale high concurrency (1,000 concurrent seat reservations).
+   - Validate Grafana real-time metrics and collision handling.
+
 

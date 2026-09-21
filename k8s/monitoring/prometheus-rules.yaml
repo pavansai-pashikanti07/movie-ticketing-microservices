@@ -1,0 +1,76 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cinepass-alert-rules
+  namespace: cinepass-dev
+  labels:
+    release: prometheus-stack
+    role: alert-rules
+    app.kubernetes.io/part-of: cinepass
+spec:
+  groups:
+    - name: cinepass.rules
+      rules:
+        # 1. Critical Alert: HTTP 5xx Error Spike (> 5% of all requests for 2m)
+        - alert: CinePassHighHttp5xxRate
+          expr: |
+            (
+              sum(rate(http_requests_total{status_code=~"5.."}[2m])) by (app)
+              /
+              sum(rate(http_requests_total[2m])) by (app)
+            ) * 100 > 5
+          for: 2m
+          labels:
+            severity: critical
+            tier: api
+          annotations:
+            summary: "High HTTP 5xx error rate on {{ $labels.app }}"
+            description: "Service {{ $labels.app }} is returning more than 5% 5xx server errors over the last 2 minutes (current value: {{ $value | printf \"%.2f\" }}%)."
+
+        # 2. Latency Degradation: P99 Latency exceeds 1.5 seconds
+        - alert: CinePassHighP99Latency
+          expr: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, app)) > 1.5
+          for: 3m
+          labels:
+            severity: warning
+            tier: performance
+          annotations:
+            summary: "High P99 latency on {{ $labels.app }}"
+            description: "P99 latency for {{ $labels.app }} has exceeded 1.5 seconds for over 3 minutes (current: {{ $value | printf \"%.2f\" }}s)."
+
+        # 3. Flash Sale Lock Contention: Redis Seat Collisions > 50 / min
+        - alert: CinePassFlashSaleLockContentionSpike
+          expr: |
+            rate(cinepass_booking_seat_collisions_total[1m]) * 60 > 50
+          for: 1m
+          labels:
+            severity: warning
+            tier: business
+          annotations:
+            summary: "Flash sale seat locking contention spike detected"
+            description: "More than 50 customers per minute are colliding on the same seats in Redis (current rate: {{ $value | printf \"%.1f\" }} collisions/min). Potential flash sale traffic rush."
+
+        # 4. Critical Alert: Dead Letter Queue (DLQ) Message Accumulation
+        - alert: CinePassSqsDlqMessagesBacklog
+          expr: |
+            aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~".*dlq.*"} > 0
+          for: 1m
+          labels:
+            severity: critical
+            tier: worker
+          annotations:
+            summary: "CinePass SQS Dead Letter Queue has stranded messages"
+            description: "Ticket processing messages failed 3 retry attempts and moved to the DLQ. Immediate investigation required to prevent ticket issuance loss."
+
+        # 5. Pod Stability: CrashLoopBackOff or Frequent Restarts
+        - alert: CinePassPodFrequentRestarts
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="cinepass-dev"}[15m]) > 3
+          for: 1m
+          labels:
+            severity: critical
+            tier: infrastructure
+          annotations:
+            summary: "Pod {{ $labels.pod }} is restarting frequently"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} restarted {{ $value }} times within the last 15 minutes."
