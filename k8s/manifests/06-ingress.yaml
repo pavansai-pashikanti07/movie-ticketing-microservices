@@ -15,12 +15,12 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
-    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/success-codes: '200-399'
 spec:
   rules:
     - http:
         paths:
-          # Auth Service Routing
+          # Auth Service — /api/auth/* → auth-service:8080
           - path: /api/auth
             pathType: Prefix
             backend:
@@ -29,7 +29,7 @@ spec:
                 port:
                   number: 8080
 
-          # Catalog Service Routing
+          # Catalog Service — /api/catalog/* → catalog-service:8081
           - path: /api/catalog
             pathType: Prefix
             backend:
@@ -38,7 +38,7 @@ spec:
                 port:
                   number: 8081
 
-          # Booking Service Routing
+          # Booking Service — /api/bookings/* → booking-service:8082
           - path: /api/bookings
             pathType: Prefix
             backend:
@@ -47,7 +47,7 @@ spec:
                 port:
                   number: 8082
 
-          # Payment Service Routing
+          # Payment Service — /api/payments/* → payment-service:8083
           - path: /api/payments
             pathType: Prefix
             backend:
@@ -56,7 +56,7 @@ spec:
                 port:
                   number: 8083
 
-          # Notification Service Routing
+          # Notification Service — /api/notifications/* → notification-service:8084
           - path: /api/notifications
             pathType: Prefix
             backend:
@@ -64,3 +64,13 @@ spec:
                 name: notification-service
                 port:
                   number: 8084
+
+          # Frontend — catch-all: / and all non-api paths → frontend-service:80
+          # NOTE: must be LAST so specific /api/* rules match first
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
