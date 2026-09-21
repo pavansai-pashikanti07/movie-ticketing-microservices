@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: catalog-service-sa
+  namespace: cinepass-dev
+  labels:
+    app: catalog-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: cinepass-dev
+  labels:
+    app: catalog-service
+    app.kubernetes.io/part-of: cinepass
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      serviceAccountName: catalog-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: catalog-service
+          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass-catalog-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+          # Ingest shared environment from centralized ConfigMap
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          # Ingest sensitive database credentials from Kubernetes Secret
+          env:
+            - name: PORT
+              value: "8081"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cinepass-credentials
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: cinepass-dev
+  labels:
+    app: catalog-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+      targetPort: 8081
+      protocol: TCP
+      name: http
+  selector:
+    app: catalog-service

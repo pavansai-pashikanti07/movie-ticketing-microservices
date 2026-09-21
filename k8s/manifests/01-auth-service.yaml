@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auth-service-sa
+  namespace: cinepass-dev
+  labels:
+    app: auth-service
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::304960798044:role/cinepass-dev-external-secrets-role
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: cinepass-dev
+  labels:
+    app: auth-service
+    app.kubernetes.io/part-of: cinepass
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      serviceAccountName: auth-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: auth-service
+          image: 304960798044.dkr.ecr.ap-south-2.amazonaws.com/cinepass-auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          # Ingest all non-sensitive configuration from centralized ConfigMap
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          # Ingest sensitive credentials securely from Kubernetes Secret / AWS Secrets Manager
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cinepass-credentials
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cinepass-credentials
+                  key: JWT_SECRET
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: cinepass-dev
+  labels:
+    app: auth-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: auth-service

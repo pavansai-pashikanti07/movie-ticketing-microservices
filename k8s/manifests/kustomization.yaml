@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cinepass-dev
+
+resources:
+  - 00-namespace.yaml
+  - 01-configmap.yaml
+  - 01-external-secret.yaml
+  - 01-auth-service.yaml
+  - 02-catalog-service.yaml
+  - 03-booking-service.yaml
+  - 04-payment-service.yaml
+  - 05-notification-service.yaml
+  - 06-ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: cinepass
+  environment: dev

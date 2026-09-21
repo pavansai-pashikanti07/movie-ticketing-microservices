@@ -1,0 +1,50 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "cinepass.fullname" . }}-ingress
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: {{ .Values.services.auth.port }}
+          - path: /api/catalog
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-service
+                port:
+                  number: {{ .Values.services.catalog.port }}
+          - path: /api/bookings
+            pathType: Prefix
+            backend:
+              service:
+                name: booking-service
+                port:
+                  number: {{ .Values.services.booking.port }}
+          - path: /api/payments
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-service
+                port:
+                  number: {{ .Values.services.payment.port }}
+          - path: /api/notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: {{ .Values.services.notification.port }}
+{{- end }}

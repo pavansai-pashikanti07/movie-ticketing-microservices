@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cinepass-config
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+data:
+  NODE_ENV: "production"
+  AWS_REGION: {{ .Values.global.region | quote }}
+  DB_HOST: {{ .Values.database.host | quote }}
+  DB_PORT: {{ .Values.database.port | quote }}
+  DB_NAME: {{ .Values.database.name | quote }}
+  DB_USER: {{ .Values.database.user | quote }}
+  REDIS_HOST: {{ .Values.redis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.port | quote }}
+  CLOUDFRONT_DOMAIN: {{ .Values.aws.cloudfrontDomain | quote }}
+  S3_BUCKET_NAME: {{ .Values.aws.s3BucketName | quote }}
+  SQS_QUEUE_URL: {{ .Values.aws.sqsQueueUrl | quote }}
+  BOOKING_SERVICE_URL: "http://booking-service:8082"
+  SEAT_LOCK_TTL_SECONDS: "300"

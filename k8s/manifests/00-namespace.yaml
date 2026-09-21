@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cinepass-dev
+  labels:
+    app.kubernetes.io/part-of: cinepass
+    environment: dev

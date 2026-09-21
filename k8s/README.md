@@ -1,51 +1,118 @@
-# ☸️ Kubernetes & Helm Directory (`k8s/`)
+# ☸️ CinePass Kubernetes & Helm Architecture (`k8s/`)
 
-This directory contains the **Helm Charts** and **Kubernetes manifests** used to deploy, configure, and autoscale CinePass microservices on **AWS EKS**.
-
----
-
-## 1. Why Helm instead of Plain YAML Files?
-
-In a microservices architecture with 5+ independent services:
-- Managing raw YAML (`deployment.yaml`, `service.yaml`, `ingress.yaml`, `hpa.yaml`) for each service creates **dozens of duplicated files**.
-- **Helm solves this with templates and values**:
-  - One generic microservice chart template.
-  - Separate `values.yaml` files for each service (`values-auth.yaml`, `values-booking.yaml`, etc.).
-  - Enables single-command rollbacks: `helm rollback cinepass 2`.
+Enterprise Production-Grade Kubernetes Orchestration & Helm Packaging for the CinePass Movie Ticketing Platform.
 
 ---
 
-## 2. Key Cloud-Native Kubernetes Features Configured
+## 📑 Directory Structure
 
-### 1. Ingress & AWS Load Balancer Controller
-- We define a single Kubernetes `Ingress` object:
-  ```yaml
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: cinepass-ingress
-    annotations:
-      kubernetes.io/ingress.class: alb
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-2:...
-  ```
-- **What happens behind the scenes**:
-  - The **AWS Load Balancer Controller** running on EKS listens for this Ingress.
-  - It automatically provisions an AWS Application Load Balancer in AWS VPC.
-  - It routes `/api/movies/*` to `catalog-service` and `/api/bookings/*` to `booking-service` directly to the pod IP addresses.
+```
+k8s/
+├── manifests/                    # Declarative K8s manifests (Kustomize ready)
+│   ├── 00-namespace.yaml         # cinepass-dev namespace
+│   ├── 01-auth-service.yaml      # Deployment + ClusterIP + IRSA ServiceAccount
+│   ├── 02-catalog-service.yaml   # Deployment + ClusterIP
+│   ├── 03-booking-service.yaml   # Deployment + ClusterIP + HPA (2 to 10 pods)
+│   ├── 04-payment-service.yaml   # Deployment + ClusterIP + IRSA ServiceAccount
+│   ├── 05-notification-service.yaml # Deployment + ClusterIP + IRSA ServiceAccount
+│   ├── 06-ingress.yaml           # AWS ALB Ingress (Internet-Facing)
+│   └── kustomization.yaml        # Kustomize manifest bundle
+│
+└── helm/
+    └── cinepass/                 # Umbrella Helm 3 Chart
+        ├── Chart.yaml            # Chart metadata (v1.0.0)
+        ├── values.yaml           # Centralized configuration values
+        └── templates/            # Helm Jinja-style Go templates
+            ├── _helpers.tpl      # Standard labels & name helper
+            ├── deployments.yaml  # All 5 microservices deployments
+            ├── services.yaml     # ClusterIP services
+            ├── ingress.yaml      # AWS ALB Ingress template
+            ├── hpa.yaml          # HorizontalPodAutoscaler template
+            ├── serviceaccounts.yaml # IRSA annotated service accounts
+            └── external-secrets.yaml # AWS Secrets Manager operator sync
+```
 
-### 2. Horizontal Pod Autoscaler (HPA)
-- Automatically scales pod replicas based on CPU/Memory and custom metrics:
-  - `booking-service`: Min replicas = 3, Max replicas = 50 (scales up when CPU > 70%).
-  - `catalog-service`: Min replicas = 2, Max replicas = 20.
-  - Scale-down stabilization window (300s) prevents flapping during fluctuating traffic.
+---
 
-### 3. Liveness & Readiness Probes (Zero-Downtime Guarantee)
-- **Readiness Probe (`/api/health`)**: Kubernetes does NOT send traffic to a new pod until it has successfully connected to Redis/PostgreSQL.
-- **Liveness Probe (`/api/health`)**: If a pod deadlocks or runs out of memory, Kubernetes restarts the container automatically.
+## 🚀 Quick Start Deployment
 
-### 4. Zero Secrets in Git: AWS Secrets Store CSI Driver
-- Pods pull database passwords and JWT secrets dynamically from **AWS Secrets Manager** and mount them into memory as files or environment variables.
-- Secrets are NEVER stored in Git or plain Kubernetes Secret YAMLs!
+### Option 1: Using Kustomize / Kubectl (Immediate & Declarative)
+
+```bash
+# Preview generated manifests
+kubectl kustomize k8s/manifests/
+
+# Dry-run validation
+kubectl apply --dry-run=client -k k8s/manifests/
+
+# Deploy to active EKS cluster
+kubectl apply -k k8s/manifests/
+```
+
+### Option 2: Using Helm 3 (Enterprise CI/CD Standard)
+
+```bash
+# Lint the Helm chart
+helm lint k8s/helm/cinepass/
+
+# Dry-run template generation
+helm template cinepass k8s/helm/cinepass/ -n cinepass-dev
+
+# Deploy or Upgrade release
+helm upgrade --install cinepass k8s/helm/cinepass/ \
+  --namespace cinepass-dev \
+  --create-namespace \
+  --values k8s/helm/cinepass/values.yaml
+```
+
+---
+
+## 🌐 Ingress Routing Topology (AWS ALB Controller)
+
+A single **AWS Application Load Balancer** is automatically provisioned via the AWS Load Balancer Controller in our public subnets. It routes traffic across our 5 microservices:
+
+| External Path Pattern | Target Microservice | Internal Cluster Port | Key Responsibility |
+| :--- | :--- | :---: | :--- |
+| **`GET/POST /api/auth/*`** | `auth-service` | `8080` | User registration, JWT login, RBAC roles. |
+| **`GET /api/catalog/*`** | `catalog-service` | `8081` | Movie posters, theater schedules, Redis caching. |
+| **`POST /api/bookings/*`** | `booking-service` | `8082` | High-concurrency seat locking (`SET NX EX 300`). |
+| **`POST /api/payments/*`** | `payment-service` | `8083` | Idempotent payments & SQS event emission. |
+| **`GET /api/notifications/*`** | `notification-service` | `8084` | SQS consumer worker, PDF tickets & QR codes. |
+
+---
+
+## 📈 Horizontal Pod Autoscaling (HPA)
+
+During blockbuster ticket sales (e.g. *Pushpa 2*, *Kalki*), `booking-service` scales automatically:
+
+```yaml
+minReplicas: 2
+maxReplicas: 10
+metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+- When booking traffic spikes and CPU exceeds 70%, Kubernetes spawns additional booking pods within 15 seconds.
+- When traffic cools down, HPA scales pods back down to 2, keeping EC2 Spot costs minimal.
+
+---
+
+## 🔐 Zero-Trust Security & IRSA
+
+All pods run with:
+1. **`runAsNonRoot: true`** and `runAsUser: 1000` (CIS Benchmark Compliant).
+2. **IRSA (IAM Roles for Service Accounts)**:
+   - `auth-service-sa` assumes `cinepass-dev-external-secrets-role` to read Secrets Manager.
+   - `payment-service-sa` and `notification-service-sa` assume `cinepass-dev-app-services-role` to publish and consume from SQS and upload to S3.
+   - Zero static AWS keys stored anywhere in the cluster!

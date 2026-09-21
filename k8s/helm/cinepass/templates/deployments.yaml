@@ -1,0 +1,294 @@
+# 1. Auth Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+    app: auth-service
+spec:
+  replicas: {{ .Values.services.auth.replicaCount }}
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      serviceAccountName: auth-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: auth-service
+          image: "{{ .Values.global.imageRegistry }}/cinepass-auth-service:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.auth.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          env:
+            - name: PORT
+              value: "{{ .Values.services.auth.port }}"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: {{ .Values.database.passwordKey }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.services.auth.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.auth.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.auth.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+# 2. Catalog Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+    app: catalog-service
+spec:
+  replicas: {{ .Values.services.catalog.replicaCount }}
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      serviceAccountName: catalog-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: catalog-service
+          image: "{{ .Values.global.imageRegistry }}/cinepass-catalog-service:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.catalog.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          env:
+            - name: PORT
+              value: "{{ .Values.services.catalog.port }}"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: {{ .Values.database.passwordKey }}
+          resources:
+            {{- toYaml .Values.services.catalog.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.catalog.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.catalog.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+# 3. Booking Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-service
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+    app: booking-service
+spec:
+  replicas: {{ .Values.services.booking.replicaCount }}
+  selector:
+    matchLabels:
+      app: booking-service
+  template:
+    metadata:
+      labels:
+        app: booking-service
+    spec:
+      serviceAccountName: booking-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: booking-service
+          image: "{{ .Values.global.imageRegistry }}/cinepass-booking-service:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.booking.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          env:
+            - name: PORT
+              value: "{{ .Values.services.booking.port }}"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: {{ .Values.database.passwordKey }}
+          resources:
+            {{- toYaml .Values.services.booking.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.booking.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.booking.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+# 4. Payment Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+    app: payment-service
+spec:
+  replicas: {{ .Values.services.payment.replicaCount }}
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      serviceAccountName: payment-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: payment-service
+          image: "{{ .Values.global.imageRegistry }}/cinepass-payment-service:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.payment.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          env:
+            - name: PORT
+              value: "{{ .Values.services.payment.port }}"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: {{ .Values.database.passwordKey }}
+          resources:
+            {{- toYaml .Values.services.payment.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.payment.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.payment.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+# 5. Notification Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    {{- include "cinepass.labels" . | nindent 4 }}
+    app: notification-service
+spec:
+  replicas: {{ .Values.services.notification.replicaCount }}
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      serviceAccountName: notification-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: notification-service
+          image: "{{ .Values.global.imageRegistry }}/cinepass-notification-service:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.notification.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cinepass-config
+          env:
+            - name: PORT
+              value: "{{ .Values.services.notification.port }}"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.passwordSecretName }}
+                  key: {{ .Values.database.passwordKey }}
+          resources:
+            {{- toYaml .Values.services.notification.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.notification.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.services.notification.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
