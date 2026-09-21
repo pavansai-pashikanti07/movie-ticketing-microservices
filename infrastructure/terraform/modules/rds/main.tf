@@ -1,16 +1,16 @@
 # DB Subnet Group (Runs across VPC subnets)
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "${var.db_name}-subnet-group"
+  name       = "${replace(var.db_name, "_", "-")}-subnet-group"
   subnet_ids = var.subnet_ids
 
   tags = merge(var.tags, {
-    Name = "${var.db_name}-subnet-group"
+    Name = "${replace(var.db_name, "_", "-")}-subnet-group"
   })
 }
 
 # RDS Security Group (Allows traffic on port 5432 strictly from EKS worker nodes)
 resource "aws_security_group" "db_sg" {
-  name        = "${var.db_name}-sg"
+  name        = "${replace(var.db_name, "_", "-")}-sg"
   description = "Allow inbound PostgreSQL traffic strictly from EKS worker nodes"
   vpc_id      = var.vpc_id
 
@@ -31,13 +31,13 @@ resource "aws_security_group" "db_sg" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.db_name}-sg"
+    Name = "${replace(var.db_name, "_", "-")}-sg"
   })
 }
 
 # PostgreSQL Database Instance (Free Tier db.t3.micro)
 resource "aws_db_instance" "postgres" {
-  identifier             = var.db_name
+  identifier             = var.identifier != null ? var.identifier : replace(var.db_name, "_", "-")
   engine                 = "postgres"
   engine_version         = "16"
   instance_class         = var.instance_class

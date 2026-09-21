@@ -90,6 +90,7 @@ module "booking_sqs" {
 module "rds" {
   source = "../../modules/rds"
 
+  identifier            = "${var.name}-postgres"
   db_name               = "cinepass_db"
   db_password           = var.db_password
   vpc_id                = module.vpc.vpc_id

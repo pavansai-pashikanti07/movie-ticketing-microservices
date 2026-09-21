@@ -1,3 +1,9 @@
+variable "identifier" {
+  description = "Identifier for the RDS instance (lowercase alphanumeric and hyphens only)"
+  type        = string
+  default     = null
+}
+
 variable "db_name" {
   description = "Name of the PostgreSQL database"
   type        = string
