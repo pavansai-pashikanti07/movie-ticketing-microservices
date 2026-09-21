@@ -43,21 +43,27 @@ In our previous Jenkins setup, we injected AWS access keys or relied on the agen
 
 ## 3. Workflow Architecture
 
-### 1. Granular Microservice CI Pipelines:
-Instead of building all 5 microservices on every git push, we use **Git Path Filters**:
-```yaml
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'services/booking-service/**'
-      - '.github/workflows/ci-booking-service.yaml'
-```
-- If a developer changes `services/booking-service/src/server.go`, **only** `ci-booking-service.yaml` triggers.
-- `auth-service`, `catalog-service`, and `payment-service` pipelines remain idle, saving GitHub Actions build minutes and preventing redundant deployments!
+### 1. Granular Microservice CI/CD Pipelines:
+Instead of building all 5 microservices on every git push, we use **Git Path Filters** across 5 dedicated workflows:
 
-### 2. Pipeline Stages:
-1. **Lint & Security Scan**: Lints code and runs Trivy container vulnerability scanner.
-2. **Docker Build (Multi-Stage Alpine)**: Builds lightweight, non-root image with buildkit cache.
-3. **AWS ECR Push**: Authenticates via AWS OIDC and pushes tagged image (`sha-${{ github.sha }}`).
-4. **GitOps Trigger**: Updates the image tag in the Kubernetes Helm values repository or triggers ArgoCD sync.
+| Microservice | Workflow File | Monorepo Path | AWS ECR Repository | EKS Deployment |
+| :--- | :--- | :--- | :--- | :--- |
+| **Auth Service** | [`auth-service.yml`](./auth-service.yml) | `services/auth-service/**` | `cinepass-auth-service` | `deployment/auth-service` |
+| **Catalog Service** | [`catalog-service.yml`](./catalog-service.yml) | `services/catalog-service/**` | `cinepass-catalog-service` | `deployment/catalog-service` |
+| **Booking Service** | [`booking-service.yml`](./booking-service.yml) | `services/booking-service/**` | `cinepass-booking-service` | `deployment/booking-service` |
+| **Payment Service** | [`payment-service.yml`](./payment-service.yml) | `services/payment-service/**` | `cinepass-payment-service` | `deployment/payment-service` |
+| **Notification Service** | [`notification-service.yml`](./notification-service.yml) | `services/notification-service/**` | `cinepass-notification-service` | `deployment/notification-service` |
+
+### 2. Pipeline Execution Stages:
+1. **Stage 1: Test & Compile TypeScript**:
+   - Checks out code and provisions Node.js 20 environment with npm package caching.
+   - Runs `npm ci` and `npm run build` (`tsc`) to guarantee compile-time type safety.
+2. **Stage 2: Continuous Delivery & EKS Rollout** (on `main` branch push):
+   - Sets up Docker Buildx with GitHub Actions caching (`type=gha`).
+   - Authenticates to AWS using IAM OIDC (`sts.amazonaws.com`) assuming `arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role`.
+   - Logs into Amazon ECR with zero static keys.
+   - Builds and tags image with both `:latest` and commit SHA `:${{ github.sha }}`.
+   - Updates kubeconfig for Amazon EKS cluster `cinepass-dev-cluster` in region `ap-south-2`.
+   - Performs zero-downtime rolling update: `kubectl set image deployment/<svc> <svc>=<ecr-url>:<sha> -n cinepass-dev`.
+   - Monitors deployment health with `kubectl rollout status deployment/<svc> -n cinepass-dev --timeout=180s`.
+

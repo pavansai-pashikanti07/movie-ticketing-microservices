@@ -38,12 +38,27 @@
 
 ---
 
-## 3. Next Steps (Phase 4: CI/CD Pipeline with GitHub Actions & GitOps)
+### ✅ Phase 4: CI/CD Pipelines with GitHub Actions & AWS OIDC (100% Complete & Pushed)
+- **5 Granular, Independent Microservice Workflows**:
+  - `auth-service.yml`: Triggered on `services/auth-service/**`
+  - `catalog-service.yml`: Triggered on `services/catalog-service/**`
+  - `booking-service.yml`: Triggered on `services/booking-service/**`
+  - `payment-service.yml`: Triggered on `services/payment-service/**`
+  - `notification-service.yml`: Triggered on `services/notification-service/**`
+- **Zero Static AWS Credentials**: Uses GitHub Actions OIDC (`aws-actions/configure-aws-credentials@v4`) assuming IAM Role `arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role`.
+- **Build Efficiency**: Docker Buildx with GitHub Actions caching (`type=gha`), TypeScript compile verification, multi-tagging (`:latest` and `:${{ github.sha }}`).
+- **Zero-Downtime Rolling Rollout**: Direct EKS rollout via `kubectl set image deployment/<svc>` and `kubectl rollout status`.
+
+---
+
+## 3. Next Steps (Phase 5: Observability, GitOps & Production Readiness)
 
 In priority order:
-1. **GitHub Actions Workflow (`.github/workflows/deploy.yml`)**:
-   - Automated linting & TypeScript compilation tests.
-   - Secure AWS OIDC authentication (Zero static AWS keys in GitHub secrets!).
-   - Multi-stage Docker container builds for all 5 services with ECR caching.
-   - Pushes images to AWS ECR (`304960798044.dkr.ecr.ap-south-2.amazonaws.com`).
-   - Helm upgrade release deployment directly to Amazon EKS v1.31 cluster.
+1. **Phase 5: Observability Stack**:
+   - Prometheus ServiceMonitors for scraping Node.js `/metrics`.
+   - Grafana dashboards for booking throughput, Redis lock contention, and SQS queue depth.
+2. **End-to-End Live Deployment & Testing**:
+   - Apply Terraform to AWS environment (`terraform apply`).
+   - Bootstrap External Secrets Operator in EKS cluster.
+   - Run GitHub Actions pipelines to deploy images and verify end-to-end booking flow.
+

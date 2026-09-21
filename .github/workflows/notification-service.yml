@@ -1,0 +1,99 @@
+name: "CI/CD: Notification Service"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/notification-service/**'
+      - '.github/workflows/notification-service.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/notification-service/**'
+      - '.github/workflows/notification-service.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Required for AWS OIDC authentication
+  contents: read
+
+env:
+  AWS_REGION: ap-south-2
+  ROLE_TO_ASSUME: arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role
+  ECR_REPOSITORY: cinepass-notification-service
+  EKS_CLUSTER_NAME: cinepass-dev-cluster
+  SERVICE_DIR: services/notification-service
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Continuous Integration (Lint, Typecheck & Compile)
+  # ---------------------------------------------------------------------------
+  test-and-build:
+    name: "Test & Compile TypeScript"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: '${{ env.SERVICE_DIR }}/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: npm ci
+
+      - name: Compile TypeScript
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: Continuous Delivery (Docker Build, ECR Push & EKS Rollout)
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: "Build Container & Deploy to EKS"
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials via OIDC (Zero Static Keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICE_DIR }}
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update Kubeconfig for Amazon EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Rolling Deploy to EKS Cluster
+        run: |
+          kubectl set image deployment/notification-service \
+            notification-service=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            -n cinepass-dev
+          kubectl rollout status deployment/notification-service -n cinepass-dev --timeout=180s
