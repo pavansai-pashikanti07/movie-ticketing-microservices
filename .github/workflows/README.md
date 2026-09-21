@@ -67,3 +67,33 @@ Instead of building all 5 microservices on every git push, we use **Git Path Fil
    - Performs zero-downtime rolling update: `kubectl set image deployment/<svc> <svc>=<ecr-url>:<sha> -n cinepass-dev`.
    - Monitors deployment health with `kubectl rollout status deployment/<svc> -n cinepass-dev --timeout=180s`.
 
+---
+
+## 4. Production Deployment Gate & Manual Owner Approval
+
+All 5 workflows now enforce an **Enterprise Deployment Approval Gate** via GitHub Environments:
+
+```yaml
+  deploy:
+    name: "Build Container & Deploy to EKS"
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+```
+
+### How It Works:
+1. When code is pushed or `workflow_dispatch` triggered, **Stage 1 (Tests & TypeScript Compile)** runs automatically.
+2. The pipeline halts before **Stage 2 (Deploy)** and enters a `Waiting for review` state.
+3. GitHub sends a notification/email to the designated owner (`pavansai-pashikanti07`).
+4. The deployment only resumes when the owner clicks **"Review deployments" ➔ "Approve and deploy"**.
+
+### How to Enable Owner Approval in GitHub:
+1. In your GitHub repository, go to **Settings ➔ Environments**.
+2. Click **New environment** and enter name: `production`.
+3. Under **Deployment protection rules**, check **Required reviewers**.
+4. Search and select your username: **`pavansai-pashikanti07`**.
+5. Click **Save protection rules**.
+
+

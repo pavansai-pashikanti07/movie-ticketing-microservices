@@ -58,6 +58,8 @@ jobs:
     needs: test-and-build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7

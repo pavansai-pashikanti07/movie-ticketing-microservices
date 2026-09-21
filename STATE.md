@@ -45,9 +45,12 @@
   - `booking-service.yml`: Triggered on `services/booking-service/**`
   - `payment-service.yml`: Triggered on `services/payment-service/**`
   - `notification-service.yml`: Triggered on `services/notification-service/**`
-- **Zero Static AWS Credentials**: Uses GitHub Actions OIDC (`aws-actions/configure-aws-credentials@v4`) assuming IAM Role `arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role`.
+- **Enterprise Environment Protection Gate (`environment: production`)**:
+  - Deployment stage halted until manually approved by the repository owner (`pavansai-pashikanti07`).
+- **Zero Static AWS Credentials**: Uses GitHub Actions OIDC (`aws-actions/configure-aws-credentials@v6`) assuming IAM Role `arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role`.
 - **Build Efficiency**: Docker Buildx with GitHub Actions caching (`type=gha`), TypeScript compile verification, multi-tagging (`:latest` and `:${{ github.sha }}`).
 - **Zero-Downtime Rolling Rollout**: Direct EKS rollout via `kubectl set image deployment/<svc>` and `kubectl rollout status`.
+
 
 ---
 
