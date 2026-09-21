@@ -16,33 +16,34 @@
 
 ---
 
-## 2. Project 2: `movie-ticketing-microservices` (Ready for Implementation)
+## 2. Project 2: `movie-ticketing-microservices` (In Progress)
 - **Repository Initialized**: GitHub repo created and synced: [movie-ticketing-microservices](https://github.com/pavansai-pashikanti07/movie-ticketing-microservices).
-- **Folder Structure**:
-  - `services/`: Directory for the 5 microservices (`auth`, `catalog`, `booking`, `payment`, `notification`).
-  - `infrastructure/terraform/`: Directory for Terraform EKS, VPC, ECR, RDS, ElastiCache modules.
-  - `.github/workflows/`: Directory for GitHub Actions CI/CD workflows using AWS OIDC (zero static secrets).
-  - `k8s/`: Directory for Helm charts and Kubernetes manifests.
 - **Architectural Blueprints**:
   - [README.md](./README.md) (Master Cloud Architecture & AWS Services Used vs Avoided Matrix)
   - [services/README.md](./services/README.md) (Deep dive on 5 microservices & sync vs async event bus)
-  - [infrastructure/terraform/README.md](./infrastructure/terraform/README.md) (Cloud resources justification: VPC, EKS, ALB, WAF, CloudFront, S3, CloudWatch, Redis Redlock, Multi-AZ RDS)
-  - [.github/workflows/README.md](./.github/workflows/README.md) (GitHub Actions OIDC & path filters)
-  - [k8s/README.md](./k8s/README.md) (Helm charts, Ingress ALB, HPA autoscaling 3-50 pods, Secrets CSI)
+  - [infrastructure/terraform/README.md](./infrastructure/terraform/README.md) (Cloud resources justification)
+- **Phase 1: Terraform Cloud Infrastructure (100% COMPLETE & VALIDATED)**:
+  - **VPC Module**: 3 Availability Zones (`ap-south-2a/b/c`), public & private subnets, EKS Ingress tags (`kubernetes.io/role/elb`), DNS support, and cost-optimized dev NAT bypass (₹0 NAT cost).
+  - **EKS Module**: AWS EKS v1.31, Spot Managed Node Groups (`t3.medium`, 70-80% discount), public API endpoint, and CloudWatch 1-day log retention.
+  - **ECR Module**: 5 private microservice repositories with image vulnerability scanning on push + automatic lifecycle policy (keeps last 10 images to stay in 500MB Free Tier).
+  - **SQS Module**: Decoupled asynchronous event queue (`cinepass-booking-queue`) + Dead Letter Queue (`cinepass-booking-queue-dlq`) with redrive policy.
+  - **RDS PostgreSQL Module**: Isolated DB Subnet Group, security group permitting port 5432 strictly from EKS worker nodes, and PostgreSQL 16 `db.t3.micro` instance.
+  - **S3 Assets Module**: S3 bucket for movie posters, theater maps, and PDF boarding passes with versioning and public access block.
+  - **IAM Module**: 4 IRSA & OIDC roles (ALB Ingress Controller, External Secrets Operator, App SQS/S3, GitHub Actions OIDC).
+  - **CloudFront Module**: Edge CDN distribution with Origin Access Control (OAC) and S3 bucket read policy (1 TB/mo Free Tier).
+  - **Secrets Manager Module**: Encrypted credentials store for DB password, JWT secret, and host for External Secrets Operator.
+  - **ElastiCache Redis Module**: In-memory Redis 7.1 cluster (`cache.t3.micro` Free Tier) for 5-minute atomic seat locking.
+  - **SNS Alerts Module**: System notification topic for CloudWatch alarms and critical event dispatches.
+  - **Orchestration**: `env/dev/` fully wired with all 11 modules and verified with `terraform validate` (0 warnings/errors).
+
 
 ---
 
-## 3. Plan for Tomorrow (Resume from Here!)
+## 3. Next Steps (Phase 2: Microservices Development)
 
-1. **Phase 1: Terraform EKS & Cloud Infrastructure**:
-   - Write Terraform modules for 3-AZ VPC with NAT Gateways.
-   - Write Terraform module for AWS EKS Cluster + Node Groups.
-   - Setup AWS ECR repositories for each microservice.
-2. **Phase 2: Microservices Development**:
-   - Build `auth-service` (JWT, bcrypt, PostgreSQL).
-   - Build `booking-service` (Go/Node with Redis distributed seat locking - 5-min TTL).
-   - Build `catalog-service`, `payment-service`, and `notification-service`.
-3. **Phase 3: GitHub Actions OIDC**:
-   - Write `.github/workflows/` with AWS OIDC IAM role and path filtering.
-4. **Phase 4: Helm & EKS Ingress**:
-   - Deploy Helm charts to EKS with AWS Load Balancer Controller.
+1. **`auth-service/`**: User registration, bcrypt hashing, JWT issuance, RBAC, Dockerfile.
+2. **`booking-service/`**: High-concurrency seat selection with Redis atomic distributed lock (5-minute TTL).
+3. **`catalog-service/`**: Read-heavy movies, auditoriums, showtimes, and poster assets.
+4. **`payment-service/`**: Idempotent payments ledger and SQS booking event emission.
+5. **`notification-service/`**: SQS consumer, PDF boarding pass generation with dynamic QR, email/SMS dispatch.
+
