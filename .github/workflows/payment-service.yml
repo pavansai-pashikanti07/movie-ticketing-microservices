@@ -101,3 +101,27 @@ jobs:
             payment-service=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
             -n cinepass-dev
           kubectl rollout status deployment/payment-service -n cinepass-dev --timeout=180s
+
+      - name: Generate Deployment Summary
+        if: always()
+        run: |
+          echo "## 🎬 CinePass Deployment Summary - Payment Service" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Service** | \`payment-service\` (Port 8083) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Cluster** | \`${{ env.EKS_CLUSTER_NAME }}\` (\`${{ env.AWS_REGION }}\`) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Namespace** | \`cinepass-dev\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docker Image** | \`${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deployment Status** | ✅ Successfully Deployed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 How to Access & Test the Service" >> $GITHUB_STEP_SUMMARY
+          echo "Run this in your terminal to browse the microservice:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo 'kubectl port-forward svc/payment-service 8083:8083 -n cinepass-dev' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Then open in your browser:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🩺 **Health Check**: [http://localhost:8083/health](http://localhost:8083/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Prometheus Metrics**: [http://localhost:8083/metrics](http://localhost:8083/metrics)" >> $GITHUB_STEP_SUMMARY
+          echo "- 💳 **Payment API Base**: \`http://localhost:8083/api/payments\`" >> $GITHUB_STEP_SUMMARY
