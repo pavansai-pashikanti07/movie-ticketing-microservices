@@ -66,7 +66,7 @@ module "eks" {
       name           = "${var.name}-spot-ng"
       min_size       = 1
       max_size       = 3
-      desired_size   = 2
+      desired_size   = 3
       instance_types = var.instance_types
       capacity_type  = var.capacity_type
 
@@ -202,6 +202,104 @@ module "sns_alerts" {
 
   name = "${var.name}-alerts"
   tags = var.tags
+}
+
+
+## ============================================================================
+## Kubernetes In-Cluster Add-ons (Automated GitOps & Ingress via Helm)
+## ============================================================================
+
+# 1. AWS Load Balancer Controller ServiceAccount (IRSA)
+resource "kubernetes_service_account" "aws_load_balancer_controller" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.iam.alb_controller_role_arn
+    }
+    labels = {
+      "app.kubernetes.io/component" = "controller"
+      "app.kubernetes.io/name"      = "aws-load-balancer-controller"
+    }
+  }
+
+  depends_on = [module.eks]
+}
+
+# 2. AWS Load Balancer Controller Helm Release (Auto-Creates AWS ALBs & TargetGroups)
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+
+  set {
+    name  = "clusterName"
+    value = module.eks.cluster_name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = kubernetes_service_account.aws_load_balancer_controller.metadata[0].name
+  }
+
+  set {
+    name  = "region"
+    value = "ap-south-2"
+  }
+
+  set {
+    name  = "vpcId"
+    value = module.vpc.vpc_id
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_service_account.aws_load_balancer_controller
+  ]
+}
+
+# 3. Argo CD Namespace
+resource "kubernetes_namespace" "argocd" {
+  metadata {
+    name = "argocd"
+  }
+
+  depends_on = [module.eks]
+}
+
+# 4. Argo CD Helm Release (Continuous Declarative GitOps)
+resource "helm_release" "argocd" {
+  name       = "argo-cd"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-cd"
+  namespace  = kubernetes_namespace.argocd.metadata[0].name
+
+  set {
+    name  = "server.service.type"
+    value = "ClusterIP"
+  }
+
+  # Optimize for FinOps / Spot node capacity (disable unused Dex & Notification workers)
+  set {
+    name  = "dex.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "notifications.enabled"
+    value = "false"
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.argocd
+  ]
 }
 
 

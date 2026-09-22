@@ -1,0 +1,68 @@
+name: "GitOps: Platform Sync"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'k8s/**'
+      - '.github/workflows/gitops-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Required for AWS OIDC authentication
+  contents: read
+
+env:
+  AWS_REGION: ap-south-2
+  ROLE_TO_ASSUME: arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role
+  EKS_CLUSTER_NAME: cinepass-dev-eks
+
+jobs:
+  validate-and-sync:
+    name: "Validate & Sync GitOps Manifests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Validate Kustomize Manifests (Dry Run)
+        run: |
+          echo "Validating k8s manifests..."
+          kubectl kustomize k8s/manifests/
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Kubeconfig for Amazon EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Apply Platform Manifests & Argo CD App
+        run: |
+          echo "Applying base platform manifests..."
+          kubectl apply -k k8s/manifests/
+          
+          if [ -f k8s/gitops/argo-application.yaml ]; then
+            echo "Applying Argo CD Application CRD..."
+            kubectl apply -f k8s/gitops/argo-application.yaml
+          fi
+
+      - name: Trigger Argo CD Hard Refresh
+        run: |
+          echo "Triggering Argo CD application refresh..."
+          kubectl annotate application cinepass-dev -n argocd argocd.argoproj.io/refresh=hard --overwrite || echo "Argo CD app will reconcile automatically"
+
+      - name: Generate GitOps Summary
+        if: always()
+        run: |
+          echo "## 🚀 GitOps Platform Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Cluster** | \`${{ env.EKS_CLUSTER_NAME }}\` (\`${{ env.AWS_REGION }}\`) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target Namespace** | \`cinepass-dev\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Git Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **GitOps Controller** | Argo CD (\`argocd\` namespace) |" >> $GITHUB_STEP_SUMMARY

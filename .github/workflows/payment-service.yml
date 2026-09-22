@@ -97,6 +97,12 @@ jobs:
 
       - name: Rolling Deploy to EKS Cluster
         run: |
+          if ! kubectl get deployment payment-service -n cinepass-dev > /dev/null 2>&1; then
+            echo "Deployment payment-service not found in cinepass-dev. Applying base manifests..."
+            kubectl apply -f k8s/manifests/00-namespace.yaml
+            kubectl apply -f k8s/manifests/01-configmap.yaml
+            kubectl apply -f k8s/manifests/04-payment-service.yaml
+          fi
           kubectl set image deployment/payment-service \
             payment-service=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
             -n cinepass-dev
