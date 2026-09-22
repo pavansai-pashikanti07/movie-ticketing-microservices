@@ -16,6 +16,8 @@ resources:
   - 07-frontend-configmap.yaml
   - 07-frontend-service.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: cinepass
-  environment: dev
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: cinepass
+      environment: dev
+    includeSelectors: false
