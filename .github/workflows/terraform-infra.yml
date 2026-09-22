@@ -86,6 +86,62 @@ jobs:
           kubectl get pods -n monitoring
           echo "=== Cluster is 100% Ready for Interview! ==="
 
+      - name: Generate GitHub Step Summary
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        run: |
+          echo "Waiting up to 60s for ALB DNS to propagate..."
+          ALB_HOSTNAME=""
+          for i in {1..12}; do
+            ALB_HOSTNAME=$(kubectl get ingress cinepass-ingress -n cinepass-dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            if [ -n "$ALB_HOSTNAME" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # 🎬 CinePass Cloud Infrastructure & Services Summary
+
+          ### 🌐 Application & UI Access
+          * **Cinema Web UI**: [http://${ALB_HOSTNAME}](http://${ALB_HOSTNAME})
+          * **ALB Hostname**: \`${ALB_HOSTNAME:-"Provisioning in AWS..."}\`
+
+          ---
+
+          ### 🔑 Endpoints & Credentials
+          | Service | URL / Port / Access | Notes |
+          | :--- | :--- | :--- |
+          | **Frontend UI** | \`http://${ALB_HOSTNAME}/\` | Luxury Cinema Booking Portal |
+          | **Catalog API** | \`http://${ALB_HOSTNAME}/api/v1/catalog\` | Movies & Shows List |
+          | **Auth API** | \`http://${ALB_HOSTNAME}/api/v1/auth\` | User JWT Authentication |
+          | **Booking API** | \`http://${ALB_HOSTNAME}/api/v1/booking\` | Redis Atomic Seat Holds |
+          | **Payment API** | \`http://${ALB_HOSTNAME}/api/v1/payment\` | Ledger & SQS Events |
+          | **Grafana** | Port-forward: \`kubectl port-forward -n monitoring svc/prometheus-stack-grafana 3000:80\` | User: \`admin\` \| Pass: \`admin123\` |
+          | **Argo CD** | Port-forward: \`kubectl port-forward -n argocd svc/argo-cd-argocd-server 8080:443\` | User: \`admin\` |
+
+          ---
+
+          ### 📦 Kubernetes Workload Status
+          #### CinePass Microservices (\`cinepass-dev\`):
+          \`\`\`text
+          $(kubectl get pods -n cinepass-dev -o wide)
+          \`\`\`
+
+          #### Observability Stack (\`monitoring\`):
+          \`\`\`text
+          $(kubectl get pods -n monitoring)
+          \`\`\`
+
+          #### EKS Worker Nodes:
+          \`\`\`text
+          $(kubectl get nodes -o wide)
+          \`\`\`
+
+          ---
+          > 💡 **Quick Local Connection Command:**
+          > \`aws eks update-kubeconfig --region ap-south-2 --name cinepass-dev-eks\`
+          EOF
+
       - name: Terraform Destroy
         if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}"
         working-directory: ${{ env.WORKING_DIR }}
