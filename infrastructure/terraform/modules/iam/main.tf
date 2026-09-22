@@ -126,7 +126,11 @@ resource "aws_iam_policy" "alb_controller_policy" {
           "elasticloadbalancing:ModifyTargetGroupAttributes",
           "elasticloadbalancing:DeleteTargetGroup",
           "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets"
+          "elasticloadbalancing:DeregisterTargets",
+          "elasticloadbalancing:AddTags",
+          "elasticloadbalancing:RemoveTags",
+          "elasticloadbalancing:ModifyListener",
+          "elasticloadbalancing:ModifyRule"
         ]
         Resource = "*"
       }
