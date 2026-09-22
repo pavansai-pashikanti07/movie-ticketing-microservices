@@ -2,8 +2,8 @@ name: "Terraform Infrastructure Automation"
 
 on:
   schedule:
-    # 01:30 UTC is 07:00 AM IST (Morning Auto-Recreate)
-    - cron: '30 1 * * *'
+    # 00:20 UTC is 05:50 AM IST (Early Morning Auto-Recreate)
+    - cron: '20 0 * * *'
   workflow_dispatch:
     inputs:
       action:
