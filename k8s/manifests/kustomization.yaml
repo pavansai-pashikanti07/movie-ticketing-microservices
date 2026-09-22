@@ -13,6 +13,8 @@ resources:
   - 04-payment-service.yaml
   - 05-notification-service.yaml
   - 06-ingress.yaml
+  - 07-frontend-configmap.yaml
+  - 07-frontend-service.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: cinepass

@@ -7,7 +7,7 @@ metadata:
     app: frontend-service
     app.kubernetes.io/part-of: cinepass
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend-service
