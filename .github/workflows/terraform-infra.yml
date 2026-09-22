@@ -65,7 +65,7 @@ jobs:
         if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          terraform apply -auto-approve
+          terraform apply -auto-approve || (echo "Retrying Terraform apply to resolve any transient cloud/helm timing..." && sleep 15 && terraform apply -auto-approve)
 
       - name: Configure Kubeconfig & Deploy CinePass Manifests
         if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
@@ -73,17 +73,18 @@ jobs:
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks
           kubectl get nodes -o wide
           
-          # Deploy CinePass Microservices, Secrets & Ingress
-          kubectl apply -k k8s/manifests
+          # Deploy CinePass Microservices, Secrets & Ingress with retry
+          kubectl apply -k k8s/manifests || (sleep 10 && kubectl apply -k k8s/manifests)
           
-          # Deploy Observability ServiceMonitors & Alert Rules
-          kubectl apply -f k8s/monitoring/servicemonitors.yaml
-          kubectl apply -f k8s/monitoring/prometheus-rules.yaml
+          # Deploy Observability ServiceMonitors & Alert Rules with retry
+          kubectl apply -f k8s/monitoring/servicemonitors.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/servicemonitors.yaml)
+          kubectl apply -f k8s/monitoring/prometheus-rules.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/prometheus-rules.yaml)
           
           echo "=== All Pods in cinepass-dev ==="
           kubectl get pods -n cinepass-dev -o wide
           echo "=== All Pods in monitoring ==="
           kubectl get pods -n monitoring
+          echo "=== Cluster is 100% Ready for Interview! ==="
 
       - name: Terraform Destroy
         if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}"

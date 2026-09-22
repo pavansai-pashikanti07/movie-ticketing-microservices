@@ -262,6 +262,9 @@ resource "helm_release" "aws_load_balancer_controller" {
     value = module.vpc.vpc_id
   }
 
+  wait    = true
+  timeout = 600
+
   depends_on = [
     module.eks,
     kubernetes_service_account.aws_load_balancer_controller
