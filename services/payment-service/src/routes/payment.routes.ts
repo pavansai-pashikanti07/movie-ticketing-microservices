@@ -11,9 +11,11 @@ const router = Router();
 
 // Payment Processing & Ledger Endpoints
 router.post('/process', processPayment);
-router.get('/:paymentId', getPaymentById);
+router.get('/health', healthCheck);
 router.get('/booking/:bookingId', getPaymentByBookingId);
 router.post('/webhook', webhookHandler);
-router.get('/health', healthCheck);
+router.get('/:paymentId', getPaymentById);
+
+
 
 export default router;

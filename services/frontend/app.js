@@ -76,12 +76,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   showAPIStatusBanner();
 });
 
-// ─── Health / API Status ────────────────────────────────────────────────────
 async function checkServiceHealth(service, path) {
   const r = await apiFetch(`${API[service]}/${path}`);
-  apiOnline[service] = r.ok;
-  return r.ok;
+  const isUp = r.ok || (r.status > 0 && r.status < 500 && r.data && (r.data.status === 'UP' || r.data.message));
+  apiOnline[service] = !!isUp;
+  return !!isUp;
 }
+
 
 async function showAPIStatusBanner() {
   // parallel health checks
