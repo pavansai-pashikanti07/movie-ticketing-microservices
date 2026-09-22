@@ -4,9 +4,19 @@ const path = require('path');
 const frontendDir = path.resolve(__dirname, '..', 'services', 'frontend');
 const outputFile = path.resolve(__dirname, '..', 'k8s', 'manifests', '07-frontend-configmap.yaml');
 
-const indexHtml = fs.readFileSync(path.join(frontendDir, 'index.html'), 'utf8');
+let indexHtml = fs.readFileSync(path.join(frontendDir, 'index.html'), 'utf8');
 const styleCss = fs.readFileSync(path.join(frontendDir, 'style.css'), 'utf8');
 const appJs = fs.readFileSync(path.join(frontendDir, 'app.js'), 'utf8');
+
+// Inline CSS and JS into index.html so browser never fails to load styles or scripts due to MIME or network issues
+indexHtml = indexHtml.replace(
+  '<link rel="stylesheet" href="style.css">',
+  `<style>\n${styleCss}\n</style>`
+);
+indexHtml = indexHtml.replace(
+  '<script src="app.js"></script>',
+  `<script>\n${appJs}\n</script>`
+);
 
 function indent(text, spaces) {
   const pad = ' '.repeat(spaces);
@@ -30,4 +40,4 @@ ${indent(appJs, 4)}
 `;
 
 fs.writeFileSync(outputFile, yamlContent, 'utf8');
-console.log('Successfully generated clean UTF-8 k8s/manifests/07-frontend-configmap.yaml');
+console.log('Successfully generated bulletproof inlined UTF-8 k8s/manifests/07-frontend-configmap.yaml');

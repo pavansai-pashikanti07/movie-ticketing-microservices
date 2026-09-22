@@ -16,7 +16,1551 @@ data:
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="style.css">
+      <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-darker: #05070b;
+      --bg-card: #121826;
+      --bg-card-hover: #182032;
+      --bg-panel: #161e30;
+    
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(229, 9, 20, 0.4);
+    
+      --red: #E50914;
+      --red-hover: #ff1f2d;
+      --cyan: #06B6D4;
+      --gold: #F59E0B;
+      --green: #10B981;
+    
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+    
+      --font-main: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    
+    /* ============================================================================
+       1. Top Announcement Bar
+       ============================================================================ */
+    .top-bar {
+      background: var(--bg-darker);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.4rem 0;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    .top-bar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .top-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    
+    .live-pulse {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+    }
+    
+    .sep {
+      color: var(--border-subtle);
+    }
+    
+    .top-links {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    
+    .link-item {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .link-item:hover {
+      color: #fff;
+    }
+    
+    .btn-admin-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(229, 9, 20, 0.12);
+      color: #ff4d58;
+      border: 1px solid rgba(229, 9, 20, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-admin-nav:hover {
+      background: var(--red);
+      color: #fff;
+    }
+    
+    /* ============================================================================
+       2. Main Navigation Bar
+       ============================================================================ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 13, 22, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.8rem 0;
+    }
+    
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    
+    .logo .highlight {
+      color: var(--red);
+    }
+    
+    .search-box {
+      flex: 1;
+      max-width: 520px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .search-box svg {
+      position: absolute;
+      left: 1rem;
+    }
+    
+    .search-box input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.7rem 1rem 0.7rem 2.8rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    
+    .search-box input:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--red);
+      box-shadow: 0 0 15px rgba(229, 9, 20, 0.2);
+    }
+    
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    
+    .city-selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .city-selector-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--red);
+    }
+    
+    .btn-signin {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-signin:hover {
+      background: var(--red-hover);
+      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+    }
+    
+    .user-logged-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border-subtle);
+    }
+    
+    .user-logged-badge .u-avatar {
+      width: 26px;
+      height: 26px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    
+    .user-logged-badge .u-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    /* Secondary Sub-Navbar */
+    .sub-nav {
+      background: #0d121d;
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.5rem 0;
+      font-size: 0.82rem;
+    }
+    
+    .sub-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .sub-nav-links {
+      display: flex;
+      gap: 1.8rem;
+    }
+    
+    .sub-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    
+    .sub-link:hover, .sub-link.active {
+      color: #fff;
+      border-bottom: 2px solid var(--red);
+      padding-bottom: 4px;
+    }
+    
+    .tag-promo {
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    
+    /* ============================================================================
+       3. Hero Spotlight Section
+       ============================================================================ */
+    .hero-spotlight {
+      position: relative;
+      min-height: 480px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+    
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.65);
+      transition: background-image 0.5s ease;
+    }
+    
+    .hero-gradient-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #090d16 25%, rgba(9, 13, 22, 0.85) 60%, transparent 100%),
+                  linear-gradient(0deg, #090d16 0%, transparent 60%);
+    }
+    
+    .hero-layout {
+      position: relative;
+      z-index: 2;
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+    
+    .hero-info {
+      max-width: 680px;
+    }
+    
+    .hero-tag-row {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .hero-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.5px;
+    }
+    
+    .hero-pill.red {
+      background: rgba(229, 9, 20, 0.2);
+      color: #ff4d58;
+      border: 1px solid rgba(229, 9, 20, 0.4);
+    }
+    
+    .hero-pill.glass {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    .hero-heading {
+      font-family: var(--font-main);
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 0.7rem;
+      color: #fff;
+    }
+    
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .rating-star {
+      color: var(--gold);
+      font-weight: 800;
+    }
+    
+    .votes {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    
+    .bullet {
+      color: var(--border-subtle);
+    }
+    
+    .hero-badge {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .hero-synopsis {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+    
+    .hero-cta-group {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .btn-hero-book {
+      background: linear-gradient(135deg, var(--red), #b91c1c);
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(229, 9, 20, 0.4);
+      transition: all 0.2s;
+    }
+    
+    .btn-hero-book:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(229, 9, 20, 0.6);
+    }
+    
+    .btn-hero-trailer {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0.8rem 1.4rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-hero-trailer:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+    
+    /* ============================================================================
+       4. Movie Catalog Grid
+       ============================================================================ */
+    .main-content {
+      padding-top: 3rem;
+      padding-bottom: 4rem;
+    }
+    
+    .catalog-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    
+    .section-heading {
+      font-family: var(--font-main);
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    
+    .lang-pills {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+    
+    .filter-pill {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .filter-pill.active, .filter-pill:hover {
+      background: var(--red);
+      color: #fff;
+    }
+    
+    /* Cards Grid */
+    .movie-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.8rem;
+    }
+    
+    .movie-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(229, 9, 20, 0.4);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    }
+    
+    .poster-box {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      overflow: hidden;
+      background: #0d121d;
+    }
+    
+    .poster-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    .movie-card:hover .poster-box img {
+      transform: scale(1.04);
+    }
+    
+    .score-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 3px 7px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: var(--gold);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .lang-badge {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .card-details {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .c-title {
+      font-family: var(--font-main);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .c-genre {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+    }
+    
+    .btn-card-book {
+      width: 100%;
+      background: rgba(229, 9, 20, 0.12);
+      color: #ff4d58;
+      border: 1px solid rgba(229, 9, 20, 0.3);
+      padding: 0.55rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-card-book:hover {
+      background: var(--red);
+      color: #fff;
+    }
+    
+    /* ============================================================================
+       5. Modals Common
+       ============================================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal-card {
+      background: #0f1523;
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 940px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    }
+    
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .close-btn:hover {
+      background: var(--red);
+    }
+    
+    .modal-top-right {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      z-index: 10;
+    }
+    
+    /* City Picker Modal */
+    .city-card {
+      max-width: 580px;
+      padding: 2rem;
+    }
+    
+    .modal-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    
+    .city-search input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      outline: none;
+    }
+    
+    .popular-cities-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    
+    .city-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+    }
+    
+    .city-item-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 0.8rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .city-item-btn:hover, .city-item-btn.selected {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+    
+    /* ============================================================================
+       6. Theater Seat Booking Modal
+       ============================================================================ */
+    .booking-top-panel {
+      padding: 1.6rem 2rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .eks-sync-badge {
+      font-size: 0.65rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    
+    .live-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 3px;
+    }
+    
+    .seat-timer-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+    }
+    
+    .timer-text {
+      font-size: 0.62rem;
+      color: #fca5a5;
+      font-weight: 700;
+    }
+    
+    .timer-digits {
+      font-size: 1rem;
+      font-weight: 800;
+      font-family: var(--font-main);
+      color: #ef4444;
+    }
+    
+    .selection-bar {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+    
+    .select-field {
+      flex: 1;
+    }
+    
+    .select-field label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      font-weight: 700;
+    }
+    
+    .select-field select {
+      width: 100%;
+      background: #182235;
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    
+    .showtimes-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+    
+    .time-btn {
+      background: #182235;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .time-btn.active {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+    
+    /* 3D Cinema Hall Screen */
+    .theater-hall {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: radial-gradient(circle at 50% 15%, rgba(6, 182, 212, 0.06), transparent 70%);
+    }
+    
+    .curved-screen-container {
+      perspective: 400px;
+      margin-bottom: 2.2rem;
+      text-align: center;
+    }
+    
+    .curved-screen {
+      width: 360px;
+      height: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.1) 100%);
+      border-radius: 50% 50% 0 0;
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+      transform: rotateX(-35deg);
+    }
+    
+    .screen-caption {
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-top: 0.6rem;
+      font-weight: 700;
+    }
+    
+    /* Seat Matrix */
+    .seat-matrix {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1.8rem;
+    }
+    
+    .tier-title-row {
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin: 0.5rem 0 0.2rem;
+      font-weight: 700;
+    }
+    
+    .s-row {
+      display: flex;
+      gap: 0.45rem;
+      align-items: center;
+    }
+    
+    .r-label {
+      width: 20px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-align: center;
+    }
+    
+    .s-seat {
+      width: 26px;
+      height: 24px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 5px 5px 2px 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    
+    .s-seat:hover:not(.booked):not(.locked) {
+      background: #334155;
+      transform: scale(1.15);
+      border-color: #94a3b8;
+    }
+    
+    .s-seat.selected {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red-hover);
+      box-shadow: 0 0 10px rgba(229, 9, 20, 0.7);
+      transform: scale(1.1);
+    }
+    
+    .s-seat.locked {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--gold);
+      color: var(--gold);
+      cursor: not-allowed;
+    }
+    
+    .s-seat.booked {
+      background: #090d16;
+      border-color: transparent;
+      color: #334155;
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+    
+    .seat-indicators {
+      display: flex;
+      gap: 1.2rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    .ind-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    
+    .seat-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    
+    .seat-dot.available { background: #1e293b; border: 1px solid #475569; }
+    .seat-dot.selected { background: var(--red); }
+    .seat-dot.locked { background: var(--gold); }
+    .seat-dot.booked { background: #334155; opacity: 0.4; }
+    
+    /* Booking Bottom Bar */
+    .booking-bottom-bar {
+      padding: 1.2rem 2rem;
+      background: #0a0e18;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .summary-info {
+      display: flex;
+      gap: 2rem;
+    }
+    
+    .sub-lbl {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    
+    .seat-names-display {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .total-bill-display {
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-family: var(--font-main);
+      color: var(--green);
+    }
+    
+    .btn-pay-now {
+      background: linear-gradient(135deg, var(--red), #b91c1c);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.8rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-pay-now:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    
+    .btn-pay-now:not(:disabled):hover {
+      box-shadow: 0 4px 20px rgba(229, 9, 20, 0.5);
+      transform: translateY(-2px);
+    }
+    
+    /* ============================================================================
+       7. Customer Auth Modal
+       ============================================================================ */
+    .auth-card {
+      max-width: 440px;
+      padding: 2rem;
+    }
+    
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+    
+    .auth-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .auth-tab.active {
+      color: var(--red);
+      border-bottom: 2px solid var(--red);
+    }
+    
+    .auth-body h3 {
+      font-family: var(--font-main);
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+    
+    .auth-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    
+    .form-group input {
+      width: 100%;
+      background: #182235;
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.65rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    
+    .form-group input:focus {
+      border-color: var(--red);
+    }
+    
+    .btn-auth-submit {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+    
+    .btn-auth-submit:hover {
+      background: var(--red-hover);
+    }
+    
+    /* ============================================================================
+       8. Theater Admin Console Modal
+       ============================================================================ */
+    .admin-card {
+      max-width: 980px;
+      padding: 2rem;
+    }
+    
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 1rem;
+    }
+    
+    .admin-badge {
+      font-size: 0.65rem;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-block;
+      margin-bottom: 0.3rem;
+    }
+    
+    .admin-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .kpi-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      padding: 1.2rem;
+      border-radius: 10px;
+    }
+    
+    .kpi-lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    
+    .kpi-num {
+      font-family: var(--font-main);
+      font-size: 1.6rem;
+      font-weight: 800;
+      display: block;
+    }
+    
+    .kpi-trend {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    
+    .text-green { color: var(--green) !important; }
+    .text-cyan { color: var(--cyan) !important; }
+    .text-gold { color: var(--gold) !important; }
+    .text-red { color: var(--red) !important; }
+    
+    .admin-actions-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      padding: 1.2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-actions-section h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .input-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+    
+    .input-row input {
+      flex: 2;
+      background: #182235;
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.55rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    
+    .input-row select {
+      flex: 1;
+      background: #182235;
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 0.55rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    
+    .btn-admin-add {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    
+    /* Microservices Telemetry Table */
+    .admin-services-table h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .services-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    
+    .services-tbl th {
+      text-align: left;
+      padding: 0.6rem;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .services-tbl td {
+      padding: 0.65rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+    }
+    
+    .badge-status-up {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.68rem;
+    }
+    
+    /* ============================================================================
+       9. Boarding Pass Ticket
+       ============================================================================ */
+    .ticket-pass-card {
+      max-width: 440px;
+      padding: 0;
+      overflow: hidden;
+      animation: slideUp 0.3s ease;
+    }
+    
+    .ticket-head {
+      padding: 1.8rem;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+    }
+    
+    .ticket-brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    
+    .verified-pill {
+      font-size: 0.65rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+    
+    .ticket-cutout-divider {
+      position: relative;
+      height: 24px;
+      background: #0f1523;
+      display: flex;
+      align-items: center;
+    }
+    
+    .cutout-circle {
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+    }
+    .cutout-circle.left { left: -12px; }
+    .cutout-circle.right { right: -12px; }
+    
+    .cutout-dash {
+      width: 100%;
+      border-bottom: 2px dashed rgba(255, 255, 255, 0.15);
+    }
+    
+    .ticket-body {
+      padding: 1.5rem 1.8rem 1.8rem;
+    }
+    
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    
+    .tk-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      display: block;
+    }
+    
+    .tk-val {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .font-mono { font-family: monospace; letter-spacing: 0.5px; }
+    
+    .ticket-qr-box {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .qr-canvas {
+      width: 80px;
+      height: 80px;
+      background: #fff;
+      border-radius: 6px;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    
+    .qr-code {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .qr-instructions h4 {
+      font-size: 0.82rem;
+      color: #fff;
+      margin-bottom: 0.2rem;
+    }
+    
+    .qr-instructions p {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+    
+    .btn-ticket-done {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn-ticket-done:hover {
+      background: #059669;
+    }
+    
+    /* ============================================================================
+       10. Footer
+       ============================================================================ */
+    .footer {
+      background: var(--bg-darker);
+      border-top: 1px solid var(--border-subtle);
+      padding: 3rem 0 2rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 2rem;
+    }
+    
+    .footer-desc {
+      margin-top: 0.8rem;
+      line-height: 1.6;
+      max-width: 400px;
+    }
+    
+    .footer-col h4 {
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .footer-col ul {
+      list-style: none;
+    }
+    
+    .footer-col li {
+      margin-bottom: 0.4rem;
+    }
+    
+    .footer-bottom {
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 1.5rem;
+    }
+    
+    /* ── API Status Banner ─────────────────────────────────────────────────── */
+    .api-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      transition: background 0.3s;
+    }
+    .api-banner--ok   { background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border-bottom: 1px solid rgba(16,185,129,.2); }
+    .api-banner--warn { background: rgba(245, 158, 11, 0.12); color: #fcd34d; border-bottom: 1px solid rgba(245,158,11,.2); }
+    
+    /* ── Live Health Dots ──────────────────────────────────────────────────── */
+    .h-dot {
+      font-size: 1.1rem;
+      transition: color 0.4s;
+      cursor: help;
+    }
+    .h-dot--up   { color: #22c55e; }
+    .h-dot--down { color: #ef4444; }
+    
+    /* ── Poster Hover Overlay ─────────────────────────────────────────────── */
+    .poster-box { position: relative; overflow: hidden; }
+    .poster-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(5,7,11,.95) 0%, rgba(5,7,11,.5) 50%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .movie-card:hover .poster-overlay { opacity: 1; }
+    .overlay-synopsis {
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+      margin-bottom: 0.6rem;
+    }
+    .btn-overlay-book {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    .btn-overlay-book:hover { background: var(--red-hover); }
+    
+    /* ── Movie Card Meta ──────────────────────────────────────────────────── */
+    .c-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      margin-bottom: 0.4rem;
+    }
+    
+    /* ── Toast Slide Animation ────────────────────────────────────────────── */
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    
+    /* ── Admin Refresh Button ─────────────────────────────────────────────── */
+    .admin-top-actions {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-refresh-health {
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(6,182,212,.3);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-refresh-health:hover { background: rgba(6,182,212,.22); }
+    
+    </style>
     </head>
     <body>
     
@@ -551,7 +2095,722 @@ data:
         </div>
       </footer>
     
-      <script src="app.js"></script>
+      <script>
+    // CinePass Enterprise - Full Stack Cinema Ticketing
+    // Connected to: Auth (/api/auth), Catalog (/api/catalog), Booking (/api/bookings), Payment (/api/payments)
+    
+    // ─── API Layer ─────────────────────────────────────────────────────────────
+    const API = {
+      auth:    '/api/auth',
+      catalog: '/api/catalog',
+      booking: '/api/bookings',
+      payment: '/api/payments',
+    };
+    
+    let authToken = localStorage.getItem('cinepass_token') || null;
+    
+    function authHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+      };
+    }
+    
+    async function apiFetch(url, opts = {}) {
+      try {
+        const res = await fetch(url, { ...opts, headers: { ...authHeaders(), ...(opts.headers || {}) } });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, data };
+      } catch (err) {
+        console.warn(`[CinePass API] ${url} unreachable — using fallback`, err.message);
+        return { ok: false, status: 0, data: null };
+      }
+    }
+    
+    // ─── Fallback Catalog (when backend not reachable) ─────────────────────────
+    const FALLBACK_MOVIES = [
+      { id: 'm1', title: 'Devara: Part 1', lang: 'Telugu', genre: 'Action, Oceanic Thriller', rating: '9.4', duration: '2h 58m', cert: 'UA 16+', format: 'IMAX 3D • 4K ATMOS', poster: 'https://m.media-amazon.com/images/M/MV5BNWE3OGNiOTYtYTdmYS00NDM5LThhYzAtNmQ4ZTQzODkyNDI2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'A fearless coastal chieftain embarks on a perilous voyage into treacherous waters to safeguard his land against warlords. Starring Jr NTR, Saif Ali Khan, and Janhvi Kapoor with explosive music by Anirudh.' },
+      { id: 'm2', title: 'Kalki 2898 AD', lang: 'Telugu', genre: 'Sci-Fi, Epic Mythology', rating: '9.2', duration: '3h 01m', cert: 'UA', format: 'IMAX 3D • 4K', poster: 'https://m.media-amazon.com/images/M/MV5BMGNmOGNmMzMtNWQ3Zi00ODBiLWExMjItY2UxNzE2NGVjZWVmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'A modern avatar of Lord Vishnu descends to protect humanity from dark forces in a dystopian futuristic city of Kasi. Starring Prabhas, Amitabh Bachchan, Deepika Padukone, and Kamal Haasan.' },
+      { id: 'm3', title: 'Pushpa 2: The Rule', lang: 'Telugu', genre: 'Action, Crime Thriller', rating: '9.6', duration: '3h 12m', cert: 'A', format: '4K DOLBY ATMOS', poster: 'https://m.media-amazon.com/images/M/MV5BNGZlNmE5MjMtMmIzNi00M2RmLWJkZmMtOGE0NTk2ZTUxY2Y2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'Pushpa Raj expands his red sandalwood syndicate across international borders while confronting SP Bhanwar Singh Shekhawat in an explosive war of dominance. Starring Allu Arjun and Rashmika Mandanna.' },
+      { id: 'm4', title: 'Salaar: Ceasefire', lang: 'Telugu', genre: 'High-Octane Action', rating: '8.9', duration: '2h 55m', cert: 'A', format: 'IMAX • 4K ATMOS', poster: 'https://m.media-amazon.com/images/M/MV5BMmU5ZWQxOWMtNjFkMi00NjQ4LWE5ODgtMTFkNDg2MTlhYmQ2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'A gang leader makes a fierce promise to a dying friend and takes on other criminal factions in the ruthless fortified city of Khansaar. Directed by Prashanth Neel.' },
+      { id: 'm5', title: 'RRR (Rise Roar Revolt)', lang: 'Telugu', genre: 'Historical Epic, Action', rating: '9.5', duration: '3h 07m', cert: 'UA', format: 'IMAX 3D', poster: 'https://m.media-amazon.com/images/M/MV5BODUwNDNjMTctODUxNy00ZTA2LWIyYTEtMDc5Y2E5NjgzZmU4XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'Two legendary revolutionaries journey away from home before they begin fighting for their country in 1920s colonial India. Oscar winner for Naatu Naatu, directed by S.S. Rajamouli.' },
+      { id: 'm6', title: 'Hanu-Man', lang: 'Telugu', genre: 'Mythological Superhero', rating: '9.1', duration: '2h 38m', cert: 'UA', format: '4K DOLBY ATMOS', poster: 'https://m.media-amazon.com/images/M/MV5BMTdlMGVlMTYtOTRmOS00NTY2LWI3ZmMtMzA3YTVjMjE0ZGY2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'An ordinary young man in the village of Anjanadri gains the supreme superpowers of Lord Hanuman and rises to defend his villagers from evil supervillains.' },
+      { id: 'm7', title: 'Leo: Bloody Sweet', lang: 'Tamil', genre: 'Action, Neo-Noir Crime', rating: '8.8', duration: '2h 44m', cert: 'UA 16+', format: '4K IMAX', poster: 'https://m.media-amazon.com/images/M/MV5BMmNmNjFjNWQtZDVjYS00ZTdkLWE5NjMtNWY5YjU5N2YxNmM5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'A mild-mannered cafe owner in Kashmir is targeted by ruthless gangsters who believe he is a former feared underworld enforcer named Leo Das. Directed by Lokesh Kanagaraj.' },
+      { id: 'm8', title: 'Gladiator II', lang: 'English', genre: 'Action, Historical Drama', rating: '8.7', duration: '2h 28m', cert: 'A', format: 'IMAX Laser 3D', poster: 'https://m.media-amazon.com/images/M/MV5BMjA5OTc3NjQ4MV5BMl5BanBnXkFtZTgwNTM3NTg2NzE@._V1_.jpg', synopsis: 'Years after witnessing the sacrificial death of hero Maximus, Lucius enters the deadly arena of the Colosseum to restore Rome to its people. Directed by Ridley Scott.' },
+      { id: 'm9', title: 'Guntur Kaaram', lang: 'Telugu', genre: 'Family Drama', rating: '8.3', duration: '2h 30m', cert: 'UA', format: '4K', poster: 'https://m.media-amazon.com/images/M/MV5BNzQ1ZTE4Y2MtYmU1NC00MmZmLWFlYzAtMmQzZGMzODNhNGVjXkEyXkFqcGc@._V1_.jpg', synopsis: 'A son and mother are estranged due to differences, and a quest to reconcile them forms the crux of this emotionally charged family drama directed by Trivikram Srinivas.' },
+      { id: 'm10', title: 'Hi Nanna', lang: 'Telugu', genre: 'Romance, Drama', rating: '8.6', duration: '2h 27m', cert: 'UA', format: '4K', poster: 'https://m.media-amazon.com/images/M/MV5BYzA2NzVkZjMtMTkzOS00ZDA5LTlhMjAtYzI3MWQyN2IxOTc5XkEyXkFqcGc@._V1_.jpg', synopsis: 'A man struggles to raise his daughter alone after his lover disappears mysteriously, in this heartwarming romantic drama directed by Shouryuv.' },
+      { id: 'm11', title: 'Oppenheimer', lang: 'English', genre: 'Biography, Historical', rating: '9.0', duration: '3h 00m', cert: 'UA', format: 'IMAX 70mm', poster: 'https://m.media-amazon.com/images/M/MV5BODkxNTM3MDMtZTcyMC00NTViLWJiODQtNjE3YjI0YWUwZWQ0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'The story of American scientist, J. Robert Oppenheimer, and his role in the development of the atomic bomb. Directed by Christopher Nolan, Academy Award Best Picture.' },
+      { id: 'm12', title: 'Animal', lang: 'Hindi', genre: 'Action, Crime Drama', rating: '8.5', duration: '3h 21m', cert: 'A', format: '4K ATMOS', poster: 'https://m.media-amazon.com/images/M/MV5BZGVlYTkwMjItMjI4NC00MmMyLWI1ZWUtZjI5Y2JmNDM2ZTE1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', synopsis: 'A son embarks on a vengeful path after his father faces an assassination attempt, blurring the lines between love and madness. Starring Ranbir Kapoor, directed by Sandeep Reddy Vanga.' },
+    ];
+    
+    const CITIES_LIST = [
+      'Hyderabad', 'Bengaluru', 'Mumbai', 'Chennai',
+      'Delhi-NCR', 'Visakhapatnam', 'Vijayawada', 'Kochi',
+      'Pune', 'Kolkata', 'Ahmedabad', 'Coimbatore', 'Surat', 'Jaipur',
+    ];
+    
+    const SEAT_TIERS = {
+      RECLINER: { name: 'VIP Recliners (Row A - B)', price: 350, rows: ['A', 'B'] },
+      PRIME:    { name: 'Prime Gold (Row C - F)', price: 250, rows: ['C', 'D', 'E', 'F'] },
+      CLASSIC:  { name: 'Classic Silver (Row G - J)', price: 150, rows: ['G', 'H', 'J'] },
+    };
+    
+    let MOVIES_DATABASE = [...FALLBACK_MOVIES];
+    let currentCity     = 'Hyderabad';
+    let activeMovie     = null;
+    let selectedSeats   = new Set();
+    let seatLockInterval = null;
+    let seatLockSeconds  = 300;
+    let activeBookingId  = null;
+    let apiOnline = { auth: false, catalog: false, booking: false, payment: false };
+    
+    // ─── Bootstrap ─────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderMovies(MOVIES_DATABASE);
+      renderCityGrid();
+      setupEventListeners();
+      checkUserSession();
+      await loadCatalogFromAPI();
+      showAPIStatusBanner();
+    });
+    
+    // ─── Health / API Status ────────────────────────────────────────────────────
+    async function checkServiceHealth(service, path) {
+      const r = await apiFetch(`${API[service]}/${path}`);
+      apiOnline[service] = r.ok;
+      return r.ok;
+    }
+    
+    async function showAPIStatusBanner() {
+      // parallel health checks
+      await Promise.all([
+        checkServiceHealth('auth', 'health'),
+        checkServiceHealth('catalog', 'health'),
+        checkServiceHealth('booking', 'health'),
+        checkServiceHealth('payment', 'health'),
+      ]);
+    
+      const allUp = Object.values(apiOnline).every(Boolean);
+      const banner = document.getElementById('apiBanner');
+      if (!banner) return;
+    
+      if (allUp) {
+        banner.innerHTML = '🟢 All microservices online — Live data from Catalog, Auth, Booking & Payment APIs';
+        banner.className = 'api-banner api-banner--ok';
+      } else {
+        const down = Object.entries(apiOnline).filter(([, v]) => !v).map(([k]) => k).join(', ');
+        banner.innerHTML = `⚡ Demo mode — Services offline: <strong>${down}</strong> | UI showing fallback data`;
+        banner.className = 'api-banner api-banner--warn';
+      }
+      banner.style.display = 'flex';
+    
+      // Update admin panel health dots
+      updateAdminHealth();
+    }
+    
+    function updateAdminHealth() {
+      const services = ['auth', 'catalog', 'booking', 'payment'];
+      services.forEach(svc => {
+        const dot = document.getElementById(`health_${svc}`);
+        if (dot) {
+          dot.className = `h-dot ${apiOnline[svc] ? 'h-dot--up' : 'h-dot--down'}`;
+          dot.title = apiOnline[svc] ? `${svc} ✅ ONLINE` : `${svc} ❌ OFFLINE`;
+        }
+      });
+    }
+    
+    // ─── 1. Catalog Service Integration ────────────────────────────────────────
+    async function loadCatalogFromAPI() {
+      const res = await apiFetch(`${API.catalog}/movies`);
+      if (res.ok && res.data && Array.isArray(res.data.movies || res.data)) {
+        const movies = res.data.movies || res.data;
+        if (movies.length > 0) {
+          // Merge API movies with local posters (API may not have poster URLs)
+          MOVIES_DATABASE = movies.map((m, i) => ({
+            id: m.id || `api_${i}`,
+            title: m.title || m.name,
+            lang: m.language || m.lang || 'Telugu',
+            genre: m.genre || 'Action',
+            rating: m.rating || '9.0',
+            duration: m.duration || '2h 30m',
+            cert: m.certificate || m.cert || 'UA',
+            format: m.format || 'IMAX 3D',
+            poster: m.posterUrl || m.poster || FALLBACK_MOVIES[i % FALLBACK_MOVIES.length]?.poster,
+            synopsis: m.description || m.synopsis || '',
+          }));
+          renderMovies(MOVIES_DATABASE);
+          apiOnline.catalog = true;
+          console.log(`[CinePass] ✅ Catalog API: Loaded ${MOVIES_DATABASE.length} movies`);
+        }
+      } else {
+        console.log('[CinePass] ⚡ Catalog API offline — using fallback movies');
+      }
+    }
+    
+    function setupEventListeners() {
+      const searchInput = document.getElementById('movieSearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const q = e.target.value.toLowerCase();
+          const filtered = MOVIES_DATABASE.filter(m =>
+            m.title.toLowerCase().includes(q) ||
+            m.genre.toLowerCase().includes(q) ||
+            m.lang.toLowerCase().includes(q)
+          );
+          renderMovies(filtered);
+        });
+      }
+    }
+    
+    // ─── 2. Movie Grid Render ───────────────────────────────────────────────────
+    function renderMovies(movies) {
+      const grid = document.getElementById('movieGrid');
+      if (!grid) return;
+    
+      if (movies.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#94A3B8;">No movies match your search. Try another keyword!</div>';
+        return;
+      }
+    
+      grid.innerHTML = movies.map(m => `
+        <div class="movie-card" onclick="openMovieDetail('${m.id}')">
+          <div class="poster-box">
+            <img src="${m.poster}" alt="${m.title}" loading="lazy"
+              onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop'">
+            <span class="score-badge">★ ${m.rating}</span>
+            <span class="lang-badge">${m.lang} • ${m.cert}</span>
+            <div class="poster-overlay">
+              <p class="overlay-synopsis">${(m.synopsis || '').substring(0, 120)}...</p>
+              <button class="btn-overlay-book" onclick="event.stopPropagation(); openBooking('${m.id}')">
+                🎟️ Book Now
+              </button>
+            </div>
+          </div>
+          <div class="card-details">
+            <div>
+              <h3 class="c-title" title="${m.title}">${m.title}</h3>
+              <p class="c-genre">${m.genre}</p>
+              <p class="c-meta">${m.format} • ${m.duration}</p>
+            </div>
+            <button class="btn-card-book" onclick="event.stopPropagation(); openBooking('${m.id}')">
+              Book Tickets
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    window.openMovieDetail = function(movieId) {
+      // just open booking for now
+      openBooking(movieId);
+    };
+    
+    window.filterByLang = function(lang, el) {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      if (lang === 'ALL') {
+        renderMovies(MOVIES_DATABASE);
+      } else {
+        renderMovies(MOVIES_DATABASE.filter(m => m.lang.toLowerCase() === lang.toLowerCase()));
+      }
+    };
+    
+    // ─── 3. City Selector ──────────────────────────────────────────────────────
+    function renderCityGrid() {
+      const container = document.getElementById('citiesList');
+      if (!container) return;
+      container.innerHTML = CITIES_LIST.map(city => `
+        <button class="city-item-btn ${city === currentCity ? 'selected' : ''}" onclick="selectCity('${city}')">
+          ${city}
+        </button>
+      `).join('');
+    }
+    
+    window.openCityModal = function() {
+      document.getElementById('cityModal').classList.add('active');
+    };
+    window.closeCityModal = function() {
+      document.getElementById('cityModal').classList.remove('active');
+    };
+    window.selectCity = function(city) {
+      currentCity = city;
+      document.getElementById('currentCityLabel').innerText = city;
+      document.getElementById('sectionCityName').innerText = city;
+      closeCityModal();
+      renderCityGrid();
+    };
+    window.searchCities = function() {
+      const q = document.getElementById('citySearchInput').value.toLowerCase();
+      const filtered = CITIES_LIST.filter(c => c.toLowerCase().includes(q));
+      const container = document.getElementById('citiesList');
+      container.innerHTML = filtered.map(city => `
+        <button class="city-item-btn ${city === currentCity ? 'selected' : ''}" onclick="selectCity('${city}')">
+          ${city}
+        </button>
+      `).join('');
+    };
+    
+    // ─── 4. Booking Workflow (with API) ────────────────────────────────────────
+    window.openBooking = function(movieId) {
+      activeMovie = MOVIES_DATABASE.find(m => m.id === movieId) || MOVIES_DATABASE[0];
+      selectedSeats.clear();
+      activeBookingId = null;
+    
+      document.getElementById('bMovieTitle').innerText = activeMovie.title;
+      document.getElementById('bMovieMeta').innerText = `${activeMovie.lang} • ${activeMovie.format} • ${activeMovie.duration}`;
+    
+      renderSeatsMatrix();
+      updateCheckoutState();
+      startSeatTimer();
+    
+      document.getElementById('bookingModal').classList.add('active');
+    };
+    
+    window.closeBookingModal = function() {
+      document.getElementById('bookingModal').classList.remove('active');
+      clearInterval(seatLockInterval);
+      // Release any held booking
+      if (activeBookingId) {
+        apiFetch(`${API.booking}/${activeBookingId}/release`, { method: 'POST' });
+        activeBookingId = null;
+      }
+    };
+    
+    window.onTheaterChange = function() {
+      selectedSeats.clear();
+      renderSeatsMatrix();
+      updateCheckoutState();
+    };
+    
+    window.setTime = function(el) {
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      selectedSeats.clear();
+      renderSeatsMatrix();
+      updateCheckoutState();
+    };
+    
+    function renderSeatsMatrix() {
+      const container = document.getElementById('seatMatrix');
+      if (!container) return;
+    
+      let html = '';
+      Object.entries(SEAT_TIERS).forEach(([, tier]) => {
+        html += `<div class="tier-title-row">${tier.name} — ₹${tier.price}</div>`;
+        tier.rows.forEach(rLetter => {
+          html += `<div class="s-row"><span class="r-label">${rLetter}</span>`;
+          for (let i = 1; i <= 10; i++) {
+            const sId = `${rLetter}${i}`;
+            let status = 'available';
+            if ((rLetter === 'C' && (i === 4 || i === 5)) || (rLetter === 'A' && i === 6) || (rLetter === 'F' && i === 8)) {
+              status = 'booked';
+            } else if (rLetter === 'D' && i === 3) {
+              status = 'locked';
+            } else if (selectedSeats.has(sId)) {
+              status = 'selected';
+            }
+            html += `<div class="s-seat ${status}" data-seat="${sId}" data-price="${tier.price}" onclick="clickSeat('${sId}',${tier.price},this)">${i}</div>`;
+          }
+          html += `</div>`;
+        });
+      });
+      container.innerHTML = html;
+    }
+    
+    window.clickSeat = function(seatId, price, el) {
+      if (el.classList.contains('booked') || el.classList.contains('locked')) return;
+      if (selectedSeats.has(seatId)) {
+        selectedSeats.delete(seatId);
+        el.classList.remove('selected');
+      } else {
+        if (selectedSeats.size >= 8) { alert('Max 8 seats per booking!'); return; }
+        selectedSeats.add(seatId);
+        el.classList.add('selected');
+      }
+      updateCheckoutState();
+    };
+    
+    function updateCheckoutState() {
+      const arr = Array.from(selectedSeats);
+      const seatsListEl = document.getElementById('selectedSeatsList');
+      const billEl      = document.getElementById('totalBillDisplay');
+      const btn         = document.getElementById('btnPayNow');
+    
+      if (arr.length === 0) {
+        seatsListEl.innerText = 'None';
+        billEl.innerText = '₹0';
+        btn.disabled = true;
+        return;
+      }
+    
+      seatsListEl.innerText = arr.join(', ');
+      let subtotal = 0;
+      arr.forEach(s => {
+        const row = s.charAt(0);
+        for (const tier of Object.values(SEAT_TIERS)) {
+          if (tier.rows.includes(row)) { subtotal += tier.price; break; }
+        }
+      });
+    
+      const gst = Math.round(subtotal * 0.18);
+      const total = subtotal + gst;
+      billEl.innerText = `₹${total} (incl. ₹${gst} Tax & Fees)`;
+      btn.disabled = false;
+    }
+    
+    function startSeatTimer() {
+      clearInterval(seatLockInterval);
+      seatLockSeconds = 300;
+      const digitsEl = document.getElementById('timerDigits');
+    
+      seatLockInterval = setInterval(() => {
+        seatLockSeconds--;
+        if (seatLockSeconds <= 0) {
+          clearInterval(seatLockInterval);
+          alert('⚠️ Redis seat lock expired! Seats released back to inventory.');
+          selectedSeats.clear();
+          renderSeatsMatrix();
+          updateCheckoutState();
+          return;
+        }
+        const m = Math.floor(seatLockSeconds / 60).toString().padStart(2, '0');
+        const s = (seatLockSeconds % 60).toString().padStart(2, '0');
+        if (digitsEl) digitsEl.innerText = `${m}:${s}`;
+      }, 1000);
+    }
+    
+    // ─── 5. Payment (with API) ─────────────────────────────────────────────────
+    window.processPayment = async function() {
+      const btn = document.getElementById('btnPayNow');
+      btn.innerText = '⏳ Authorizing Payment...';
+      btn.disabled = true;
+    
+      const user = JSON.parse(localStorage.getItem('cinepass_user') || '{}');
+      const thEl  = document.getElementById('theaterSelect');
+      const timeEl = document.querySelector('.time-btn.active');
+      const theater = thEl ? thEl.value : 'theater-001';
+      const showId  = `show-${theater}-${Date.now()}`;
+    
+      let bookingRef = 'CP-' + Math.floor(100000 + Math.random() * 900000);
+      let paymentStatus = 'SUCCESS';
+    
+      // Step 1 — Hold seats via Booking Service
+      if (apiOnline.booking) {
+        const holdRes = await apiFetch(`${API.booking}/hold`, {
+          method: 'POST',
+          body: JSON.stringify({
+            showId,
+            userId: user.id || user.email || 'guest',
+            seats: Array.from(selectedSeats),
+          }),
+        });
+    
+        if (holdRes.ok && holdRes.data) {
+          activeBookingId = holdRes.data.bookingId || holdRes.data.id;
+          bookingRef = `CP-${activeBookingId || bookingRef}`;
+        }
+      }
+    
+      // Step 2 — Process payment via Payment Service
+      let amount = 0;
+      Array.from(selectedSeats).forEach(s => {
+        const row = s.charAt(0);
+        for (const tier of Object.values(SEAT_TIERS)) {
+          if (tier.rows.includes(row)) { amount += tier.price; break; }
+        }
+      });
+      const gst = Math.round(amount * 0.18);
+      const total = amount + gst;
+    
+      if (apiOnline.payment) {
+        const payRes = await apiFetch(`${API.payment}/process`, {
+          method: 'POST',
+          body: JSON.stringify({
+            bookingId: activeBookingId,
+            userId: user.id || user.email || 'guest',
+            amount: total,
+            currency: 'INR',
+            method: 'UPI',
+          }),
+        });
+    
+        if (payRes.ok && payRes.data) {
+          paymentStatus = payRes.data.status || 'SUCCESS';
+          bookingRef = `CP-${payRes.data.paymentId || payRes.data.id || activeBookingId}`;
+        }
+      }
+    
+      // Step 3 — Confirm booking
+      if (apiOnline.booking && activeBookingId) {
+        await apiFetch(`${API.booking}/${activeBookingId}/confirm`, { method: 'POST' });
+      }
+    
+      btn.innerText = 'Proceed to Payment & Buy ➔';
+      closeBookingModal();
+      generateBoardingPassTicket(bookingRef, total, paymentStatus);
+    };
+    
+    function generateBoardingPassTicket(bookingRef, totalAmount, status) {
+      const seats  = Array.from(selectedSeats).join(', ');
+      const thEl   = document.getElementById('theaterSelect');
+      const thName = thEl ? thEl.options[thEl.selectedIndex].text : 'AMB Cinemas, IMAX';
+      const timeEl = document.querySelector('.time-btn.active');
+      const timeVal = timeEl ? timeEl.innerText : '06:30 PM';
+    
+      document.getElementById('tMovieTitle').innerText = activeMovie ? activeMovie.title : 'CinePass Movie';
+      document.getElementById('tTheaterName').innerText = `${thName}, ${currentCity}`;
+      document.getElementById('tTime').innerText = timeVal;
+      document.getElementById('tSeats').innerText = seats || 'A1, A2';
+      document.getElementById('tAmount').innerText = totalAmount ? `₹${totalAmount}` : '₹0';
+      document.getElementById('tRefId').innerText = bookingRef || 'CP-000000';
+    
+      // Show payment status indicator
+      const statusEl = document.getElementById('tPayStatus');
+      if (statusEl) {
+        statusEl.innerText = status === 'SUCCESS' ? '✅ Payment Confirmed' : '⚡ Demo Booking';
+        statusEl.style.color = status === 'SUCCESS' ? '#22c55e' : '#f59e0b';
+      }
+    
+      document.getElementById('ticketModal').classList.add('active');
+    }
+    
+    window.closeTicketModal = function() {
+      document.getElementById('ticketModal').classList.remove('active');
+      selectedSeats.clear();
+      activeBookingId = null;
+    };
+    
+    // ─── 6. Auth Service Integration ───────────────────────────────────────────
+    window.openAuthModal = function(tab = 'login') {
+      switchAuthTab(tab);
+      document.getElementById('authModal').classList.add('active');
+    };
+    window.closeAuthModal = function() {
+      document.getElementById('authModal').classList.remove('active');
+    };
+    window.switchAuthTab = function(tab) {
+      if (tab === 'login') {
+        document.getElementById('tabLogin').classList.add('active');
+        document.getElementById('tabRegister').classList.remove('active');
+        document.getElementById('authLoginBody').style.display = 'block';
+        document.getElementById('authRegisterBody').style.display = 'none';
+      } else {
+        document.getElementById('tabLogin').classList.remove('active');
+        document.getElementById('tabRegister').classList.add('active');
+        document.getElementById('authLoginBody').style.display = 'none';
+        document.getElementById('authRegisterBody').style.display = 'block';
+      }
+    };
+    
+    window.handleCustomerLogin = async function(e) {
+      e.preventDefault();
+      const email    = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const btn      = e.target.querySelector('button[type=submit]');
+      btn.innerText  = 'Signing in...';
+    
+      if (apiOnline.auth) {
+        const res = await apiFetch(`${API.auth}/login`, {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+    
+        if (res.ok && res.data?.token) {
+          authToken = res.data.token;
+          localStorage.setItem('cinepass_token', authToken);
+          const userData = { name: res.data.user?.name || email.split('@')[0], email, id: res.data.user?.id, role: res.data.user?.role };
+          localStorage.setItem('cinepass_user', JSON.stringify(userData));
+          updateAuthHeader(userData.name);
+          closeAuthModal();
+          showToast(`✅ Welcome back, ${userData.name}!`);
+        } else {
+          showToast(`❌ ${res.data?.message || 'Invalid credentials'}`, 'error');
+        }
+      } else {
+        // Offline fallback
+        const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        localStorage.setItem('cinepass_user', JSON.stringify({ name, email }));
+        updateAuthHeader(name);
+        closeAuthModal();
+        showToast(`✅ Demo login — Welcome, ${name}!`);
+      }
+    
+      btn.innerText = 'Sign In';
+    };
+    
+    window.handleCustomerRegister = async function(e) {
+      e.preventDefault();
+      const name     = document.getElementById('regName').value;
+      const email    = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const btn      = e.target.querySelector('button[type=submit]');
+      btn.innerText  = 'Creating Account...';
+    
+      if (apiOnline.auth) {
+        const res = await apiFetch(`${API.auth}/register`, {
+          method: 'POST',
+          body: JSON.stringify({ name, email, password, role: 'CUSTOMER' }),
+        });
+    
+        if (res.ok && res.data?.token) {
+          authToken = res.data.token;
+          localStorage.setItem('cinepass_token', authToken);
+          localStorage.setItem('cinepass_user', JSON.stringify({ name, email, id: res.data.user?.id }));
+          updateAuthHeader(name);
+          closeAuthModal();
+          showToast(`🎉 Account created! Welcome to CinePass, ${name}!`);
+        } else {
+          showToast(`❌ ${res.data?.message || 'Registration failed'}`, 'error');
+        }
+      } else {
+        localStorage.setItem('cinepass_user', JSON.stringify({ name, email }));
+        updateAuthHeader(name);
+        closeAuthModal();
+        showToast(`🎉 Demo register — Welcome, ${name}!`);
+      }
+    
+      btn.innerText = 'Create Account';
+    };
+    
+    function checkUserSession() {
+      const saved = localStorage.getItem('cinepass_user');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          updateAuthHeader(u.name);
+        } catch (_) {}
+      }
+    }
+    
+    function updateAuthHeader(name) {
+      const container = document.getElementById('authContainer');
+      if (!container) return;
+      const initial = (name || 'G').charAt(0).toUpperCase();
+      container.innerHTML = `
+        <div class="user-logged-badge" title="Signed in as ${name}" onclick="showUserMenu()">
+          <span class="u-avatar">${initial}</span>
+          <span class="u-name">${name}</span>
+          <span style="font-size:10px;opacity:.6">▼</span>
+        </div>
+      `;
+    }
+    
+    window.showUserMenu = function() {
+      const user = JSON.parse(localStorage.getItem('cinepass_user') || '{}');
+      if (confirm(`Signed in as: ${user.name || 'Guest'}\n\nSign out?`)) {
+        localStorage.removeItem('cinepass_user');
+        localStorage.removeItem('cinepass_token');
+        authToken = null;
+        const container = document.getElementById('authContainer');
+        if (container) {
+          container.innerHTML = `<button class="btn-login" onclick="openAuthModal('login')">Sign In</button>`;
+        }
+        showToast('👋 Signed out successfully');
+      }
+    };
+    
+    // ─── 7. Admin Console ─────────────────────────────────────────────────────
+    window.openAdminModal = function() {
+      const user = JSON.parse(localStorage.getItem('cinepass_user') || '{}');
+      // Check admin access via API
+      if (authToken && apiOnline.auth) {
+        apiFetch(`${API.auth}/admin/verify-access`).then(res => {
+          if (!res.ok) {
+            showToast('🔒 Admin access denied. Requires THEATER_ADMIN role.', 'error');
+            return;
+          }
+          document.getElementById('adminModal').classList.add('active');
+          updateAdminHealth();
+        });
+      } else {
+        // Demo mode — allow admin panel
+        document.getElementById('adminModal').classList.add('active');
+        updateAdminHealth();
+      }
+    };
+    
+    window.closeAdminModal = function() {
+      document.getElementById('adminModal').classList.remove('active');
+    };
+    
+    window.adminAddMovie = async function() {
+      const title = document.getElementById('adminNewMovieTitle').value.trim();
+      const lang  = document.getElementById('adminNewMovieLang').value;
+      if (!title) { alert('Please enter a movie title!'); return; }
+    
+      const newMovie = {
+        id: 'm_' + Date.now(), title, lang,
+        genre: 'Action, Blockbuster', rating: '9.0',
+        duration: '2h 45m', cert: 'UA', format: 'IMAX 3D',
+        poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop',
+        synopsis: `${title} has been added by the Theater Administrator. Now showing across all screens in ${currentCity}.`,
+      };
+    
+      // POST to catalog service
+      if (apiOnline.catalog) {
+        const res = await apiFetch(`${API.catalog}/movies`, {
+          method: 'POST',
+          body: JSON.stringify({ title, language: lang, genre: newMovie.genre, rating: parseFloat(newMovie.rating), duration: newMovie.duration }),
+        });
+        if (res.ok) {
+          newMovie.id = res.data?.id || newMovie.id;
+          showToast(`✅ "${title}" added to Catalog Service DB!`);
+        } else {
+          showToast(`⚡ Demo mode — added locally`, 'warn');
+        }
+      }
+    
+      MOVIES_DATABASE.unshift(newMovie);
+      renderMovies(MOVIES_DATABASE);
+      document.getElementById('adminNewMovieTitle').value = '';
+    };
+    
+    window.adminRefreshHealth = async function() {
+      showToast('🔄 Refreshing service health...');
+      await showAPIStatusBanner();
+      showToast('✅ Health check complete!');
+    };
+    
+    // ─── 8. Toast Notifications ────────────────────────────────────────────────
+    function showToast(msg, type = 'ok') {
+      let toastContainer = document.getElementById('toastContainer');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(toastContainer);
+      }
+    
+      const toast = document.createElement('div');
+      const colors = { ok: '#22c55e', error: '#ef4444', warn: '#f59e0b' };
+      toast.style.cssText = `
+        background:#1e293b;border-left:4px solid ${colors[type] || colors.ok};
+        color:#f1f5f9;padding:12px 20px;border-radius:8px;font-size:14px;
+        box-shadow:0 4px 20px rgba(0,0,0,.4);min-width:280px;max-width:400px;
+        animation:slideIn .3s ease;
+      `;
+      toast.innerText = msg;
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+    
+    // ─── 9. Misc ───────────────────────────────────────────────────────────────
+    window.playTrailer = function() {
+      showToast('🎬 Playing 4K Official IMAX Trailer in Dolby Atmos...');
+    };
+    
+    window.openTheatersList = function() {
+      const theaters = {
+        'Hyderabad': ['AMB Cinemas: Laser IMAX (Gachibowli)', 'Prasads Multiplex (Necklace Road)', 'PVR Inorbit Mall', 'Asian Cinemas 4K Atmos', 'Cinepolis CCPL'],
+        'Bengaluru': ['PVR Forum Mall (Koramangala)', 'INOX Lido (MG Road)', 'Cinepolis Nexus (Whitefield)', 'PVR Orion (Rajajinagar)', 'Garuda Mall Cinemas'],
+        'Mumbai':    ['PVR BKC (Bandra-Kurla)', 'INOX R-City (Ghatkopar)', 'Cinepolis Viviana (Thane)', 'Regal Cinema (Colaba)', 'Metro INOX'],
+        'Chennai':   ['INOX Palazzo (Chennai)', 'Sathyam Cinemas (IMAX)', 'PVR VR Chennai', 'Luxe Cinemas', 'Escape Cinemas'],
+      };
+      const list = theaters[currentCity] || ['AMB Cinemas', 'PVR', 'INOX', 'Cinepolis', 'Asian Cinemas'];
+      showToast(`🏟️ ${currentCity}: ${list.slice(0,3).join(' | ')} + ${list.length - 3} more`);
+    };
+    
+    </script>
     </body>
     </html>
     
