@@ -151,6 +151,10 @@ resource "aws_eks_access_policy_association" "github_actions_admin" {
   access_scope {
     type = "cluster"
   }
+
+  depends_on = [
+    aws_eks_access_entry.github_actions
+  ]
 }
 
 
@@ -298,7 +302,85 @@ resource "helm_release" "argocd" {
 
   depends_on = [
     module.eks,
-    kubernetes_namespace.argocd
+    kubernetes_namespace.argocd,
+    helm_release.aws_load_balancer_controller
+  ]
+}
+
+# 5. Monitoring Namespace
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
+
+  depends_on = [module.eks]
+}
+
+# 6. Prometheus & Grafana Monitoring Stack Helm Release
+resource "helm_release" "prometheus_stack" {
+  name       = "prometheus-stack"
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "kube-prometheus-stack"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  timeout    = 900
+
+  # Ensure Prometheus Operator discovers ServiceMonitors and Rules across all namespaces (cinepass-dev)
+  set {
+    name  = "prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues"
+    value = "false"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.ruleSelectorNilUsesHelmValues"
+    value = "false"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues"
+    value = "false"
+  }
+
+  # Optimize resource requests for spot instances
+  set {
+    name  = "prometheus.prometheusSpec.retention"
+    value = "2d"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.resources.requests.memory"
+    value = "256Mi"
+  }
+
+  # Grafana admin credentials and settings
+  set {
+    name  = "grafana.adminPassword"
+    value = "admin123"
+  }
+
+  set {
+    name  = "grafana.persistence.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "grafana.resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "grafana.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.monitoring,
+    helm_release.aws_load_balancer_controller
   ]
 }
 

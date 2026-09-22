@@ -1,0 +1,90 @@
+name: "Terraform Infrastructure Automation"
+
+on:
+  schedule:
+    # 01:30 UTC is 07:00 AM IST (Morning Auto-Recreate)
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform Action to execute"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-south-2
+  TF_VERSION: "1.10.0"
+  WORKING_DIR: "infrastructure/terraform/env/dev"
+
+jobs:
+  terraform:
+    name: "Terraform ${{ github.event.inputs.action || 'Scheduled Apply' }}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
+
+      - name: Populate terraform.tfvars from Secret
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "${{ secrets.TFVARS_DEV }}" > terraform.tfvars
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve
+
+      - name: Configure Kubeconfig & Deploy CinePass Manifests
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks
+          kubectl get nodes -o wide
+          
+          # Deploy CinePass Microservices, Secrets & Ingress
+          kubectl apply -k k8s/manifests
+          
+          # Deploy Observability ServiceMonitors & Alert Rules
+          kubectl apply -f k8s/monitoring/servicemonitors.yaml
+          kubectl apply -f k8s/monitoring/prometheus-rules.yaml
+          
+          echo "=== All Pods in cinepass-dev ==="
+          kubectl get pods -n cinepass-dev -o wide
+          echo "=== All Pods in monitoring ==="
+          kubectl get pods -n monitoring
+
+      - name: Terraform Destroy
+        if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform destroy -auto-approve
