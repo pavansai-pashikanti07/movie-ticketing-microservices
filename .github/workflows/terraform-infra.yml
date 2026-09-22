@@ -52,8 +52,10 @@ jobs:
 
       - name: Populate terraform.tfvars from Secret
         working-directory: ${{ env.WORKING_DIR }}
+        env:
+          TFVARS_CONTENT: ${{ secrets.TFVARS_DEV }}
         run: |
-          echo "${{ secrets.TFVARS_DEV }}" > terraform.tfvars
+          printf '%s\n' "$TFVARS_CONTENT" > terraform.tfvars
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
