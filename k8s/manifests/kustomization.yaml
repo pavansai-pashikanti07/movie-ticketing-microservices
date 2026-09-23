@@ -6,6 +6,7 @@ namespace: cinepass-dev
 resources:
   - 00-namespace.yaml
   - 01-configmap.yaml
+  - 01-secret.yaml
   - 01-external-secret.yaml
   - 01-auth-service.yaml
   - 02-catalog-service.yaml
