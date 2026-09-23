@@ -73,6 +73,9 @@ jobs:
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks
           kubectl get nodes -o wide
           
+          # Ensure External Secrets CRDs exist
+          kubectl apply --server-side -f https://raw.githubusercontent.com/external-secrets/external-secrets/main/deploy/crds/bundle.yaml || true
+          
           # Deploy CinePass Microservices, Secrets & Ingress with retry
           kubectl apply -k k8s/manifests || (sleep 10 && kubectl apply -k k8s/manifests)
           
