@@ -387,4 +387,56 @@ resource "helm_release" "prometheus_stack" {
   ]
 }
 
+# 7. External Secrets Operator Namespace
+resource "kubernetes_namespace" "external_secrets" {
+  metadata {
+    name = "external-secrets"
+  }
+
+  depends_on = [module.eks]
+}
+
+# 8. External Secrets Operator ServiceAccount (IRSA)
+resource "kubernetes_service_account" "external_secrets" {
+  metadata {
+    name      = "external-secrets-sa"
+    namespace = kubernetes_namespace.external_secrets.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.iam.external_secrets_role_arn
+    }
+  }
+
+  depends_on = [kubernetes_namespace.external_secrets]
+}
+
+# 9. External Secrets Operator Helm Release
+resource "helm_release" "external_secrets" {
+  name       = "external-secrets"
+  repository = "https://charts.external-secrets.io"
+  chart      = "external-secrets"
+  namespace  = kubernetes_namespace.external_secrets.metadata[0].name
+  timeout    = 600
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = kubernetes_service_account.external_secrets.metadata[0].name
+  }
+
+  set {
+    name  = "installCRDs"
+    value = "false"
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_service_account.external_secrets,
+    helm_release.aws_load_balancer_controller
+  ]
+}
+
 
