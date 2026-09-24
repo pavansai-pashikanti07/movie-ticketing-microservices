@@ -67,27 +67,31 @@ jobs:
         run: |
           terraform apply -auto-approve || (echo "Retrying Terraform apply to resolve any transient cloud/helm timing..." && sleep 15 && terraform apply -auto-approve)
 
-      - name: Configure Kubeconfig & Deploy CinePass Manifests
+      - name: Configure Kubeconfig & Deploy GitOps & Observability
         if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks
           kubectl get nodes -o wide
-          
-          # Ensure External Secrets CRDs exist
-          kubectl apply --server-side -f https://raw.githubusercontent.com/external-secrets/external-secrets/main/deploy/crds/bundle.yaml || true
-          
-          # Deploy CinePass Microservices, Secrets & Ingress with retry
-          kubectl apply -k k8s/manifests || (sleep 10 && kubectl apply -k k8s/manifests)
-          
-          # Deploy Observability ServiceMonitors & Alert Rules with retry
+
+          echo ">>> [1/4] Installing Kubernetes Metrics Server for HPA..."
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml || true
+
+          echo ">>> [2/4] Deploying Argo CD Application (Bootstrapping GitOps)..."
+          kubectl apply -f k8s/gitops/argo-application.yaml || (sleep 10 && kubectl apply -f k8s/gitops/argo-application.yaml)
+
+          echo ">>> [3/4] Deploying Observability ServiceMonitors & Alert Rules..."
           kubectl apply -f k8s/monitoring/servicemonitors.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/servicemonitors.yaml)
           kubectl apply -f k8s/monitoring/prometheus-rules.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/prometheus-rules.yaml)
-          
-          echo "=== All Pods in cinepass-dev ==="
-          kubectl get pods -n cinepass-dev -o wide
-          echo "=== All Pods in monitoring ==="
-          kubectl get pods -n monitoring
-          echo "=== Cluster is 100% Ready for Interview! ==="
+
+          echo ">>> [4/4] Waiting 30s for Argo CD to start GitOps sync..."
+          sleep 30
+
+          echo "=== Argo CD Applications ==="
+          kubectl get applications.argoproj.io -n argocd || true
+          echo "=== Pods in cinepass-dev ==="
+          kubectl get pods -n cinepass-dev -o wide || true
+          echo "=== Pods in monitoring ==="
+          kubectl get pods -n monitoring || true
 
       - name: Generate GitHub Step Summary
         if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
@@ -102,6 +106,8 @@ jobs:
             sleep 5
           done
 
+          ARGO_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 --decode || echo "N/A")
+
           cat << EOF >> $GITHUB_STEP_SUMMARY
           # 🎬 CinePass Cloud Infrastructure & Services Summary
 
@@ -112,32 +118,32 @@ jobs:
           ---
 
           ### 🔑 Endpoints & Credentials
-          | Service | URL / Port / Access | Notes |
+          | Service | URL / Port / Access | Credentials |
           | :--- | :--- | :--- |
-          | **Frontend UI** | \`http://${ALB_HOSTNAME}/\` | Luxury Cinema Booking Portal |
-          | **Catalog API** | \`http://${ALB_HOSTNAME}/api/v1/catalog\` | Movies & Shows List |
-          | **Auth API** | \`http://${ALB_HOSTNAME}/api/v1/auth\` | User JWT Authentication |
-          | **Booking API** | \`http://${ALB_HOSTNAME}/api/v1/booking\` | Redis Atomic Seat Holds |
-          | **Payment API** | \`http://${ALB_HOSTNAME}/api/v1/payment\` | Ledger & SQS Events |
+          | **Frontend UI** | \`http://${ALB_HOSTNAME}/\` | Public Access |
+          | **Argo CD UI** | Port-forward: \`kubectl port-forward -n argocd svc/argo-cd-argocd-server 8080:443\` | User: \`admin\` \| Password: \`${ARGO_PASS}\` |
           | **Grafana** | Port-forward: \`kubectl port-forward -n monitoring svc/prometheus-stack-grafana 3000:80\` | User: \`admin\` \| Pass: \`admin123\` |
-          | **Argo CD** | Port-forward: \`kubectl port-forward -n argocd svc/argo-cd-argocd-server 8080:443\` | User: \`admin\` |
+          | **Catalog API** | \`http://${ALB_HOSTNAME}/api/catalog\` | REST Endpoint |
+          | **Auth API** | \`http://${ALB_HOSTNAME}/api/auth\` | JWT Auth |
+          | **Booking API** | \`http://${ALB_HOSTNAME}/api/bookings\` | Redis Holds |
+          | **Payment API** | \`http://${ALB_HOSTNAME}/api/payments\` | Ledger Events |
 
           ---
 
           ### 📦 Kubernetes Workload Status
+          #### Argo CD GitOps Status:
+          \`\`\`text
+          $(kubectl get applications.argoproj.io -n argocd 2>/dev/null || true)
+          \`\`\`
+
           #### CinePass Microservices (\`cinepass-dev\`):
           \`\`\`text
-          $(kubectl get pods -n cinepass-dev -o wide)
+          $(kubectl get pods -n cinepass-dev -o wide 2>/dev/null || true)
           \`\`\`
 
           #### Observability Stack (\`monitoring\`):
           \`\`\`text
-          $(kubectl get pods -n monitoring)
-          \`\`\`
-
-          #### EKS Worker Nodes:
-          \`\`\`text
-          $(kubectl get nodes -o wide)
+          $(kubectl get pods -n monitoring 2>/dev/null || true)
           \`\`\`
 
           ---
@@ -150,7 +156,24 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks || true
-          kubectl delete ingress cinepass-ingress -n cinepass-dev --ignore-not-found || true
+
+          echo ">>> [1/4] Removing Argo CD application finalizers..."
+          kubectl patch application cinepass-dev -n argocd -p '{"metadata":{"finalizers":null}}' --type=merge || true
+          kubectl delete application cinepass-dev -n argocd --ignore-not-found || true
+
+          echo ">>> [2/4] Deleting Ingress and Namespaces..."
+          kubectl delete ingress --all -A --ignore-not-found || true
           kubectl delete namespace cinepass-dev --ignore-not-found || true
-          sleep 30
+
+          echo ">>> [3/4] Checking and deleting any lingering ALBs..."
+          ALB_ARNS=$(aws elbv2 describe-load-balancers --region ${{ env.AWS_REGION }} --query "LoadBalancers[?contains(LoadBalancerName, 'cinepass')].LoadBalancerArn" --output text 2>/dev/null || true)
+          for arn in $ALB_ARNS; do
+            if [ -n "$arn" ]; then
+              echo "Deleting lingering ALB: $arn"
+              aws elbv2 delete-load-balancer --load-balancer-arn "$arn" --region ${{ env.AWS_REGION }} || true
+            fi
+          done
+
+          echo ">>> [4/4] Waiting 20s for ENI detachment and running Terraform Destroy..."
+          sleep 20
           terraform destroy -auto-approve
