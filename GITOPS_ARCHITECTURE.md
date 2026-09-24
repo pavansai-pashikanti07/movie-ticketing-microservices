@@ -91,9 +91,18 @@ spec:
 kubectl port-forward -n argocd svc/argo-cd-argocd-server 8080:443
 
 # Step 2: Retrieve admin password
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($input))
+# For Bash / Git Bash:
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
+
+# For PowerShell:
+$encoded = kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}"
+[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($encoded))
 
 # Step 3: Open in browser
+# Navigate to: https://localhost:8080
+# NOTE: Self-signed certificate error vasthe, browser lo "Advanced" -> "Proceed to localhost (unsafe)" kottandi.
+# Username: admin
+# Password: <output of step 2>
 # Navigate to: https://localhost:8080
 # Username: admin
 # Password: <retrieved password>
