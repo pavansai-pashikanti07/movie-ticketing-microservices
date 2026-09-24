@@ -3,9 +3,11 @@
 # Safe, dependency-free terraform destroy script
 # ==============================================================================
 
-Write-Host ">>> [1/3] Checking K8s Ingress and TargetGroups..." -ForegroundColor Cyan
+Write-Host ">>> [1/3] Removing Argo CD application finalizers and K8s Ingress..." -ForegroundColor Cyan
 aws eks update-kubeconfig --region ap-south-2 --name cinepass-dev-eks 2>$null
-kubectl delete ingress cinepass-ingress -n cinepass-dev --ignore-not-found 2>$null
+kubectl patch application cinepass-dev -n argocd -p '{"metadata":{"finalizers":null}}' --type=merge 2>$null
+kubectl delete application cinepass-dev -n argocd --ignore-not-found 2>$null
+kubectl delete ingress --all -A --ignore-not-found 2>$null
 kubectl delete namespace cinepass-dev --ignore-not-found 2>$null
 
 # Cleanup any orphaned ALBs or SecurityGroups created by Load Balancer Controller
