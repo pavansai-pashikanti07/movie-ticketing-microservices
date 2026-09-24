@@ -110,7 +110,9 @@ jobs:
             echo "No manifest changes to commit"
           else
             git commit -m "chore(gitops): promote ${{ env.SERVICE_NAME }} image to ${{ github.sha }} [skip ci]"
-            git push origin main
+            for i in {1..5}; do
+              git pull --rebase origin main && git push origin main && break || sleep $((RANDOM % 3 + 1))
+            done
           fi
 
       - name: Generate GitOps Step Summary
