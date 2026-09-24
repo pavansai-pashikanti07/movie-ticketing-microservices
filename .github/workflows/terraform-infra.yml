@@ -149,4 +149,8 @@ jobs:
         if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}"
         working-directory: ${{ env.WORKING_DIR }}
         run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks || true
+          kubectl delete ingress cinepass-ingress -n cinepass-dev --ignore-not-found || true
+          kubectl delete namespace cinepass-dev --ignore-not-found || true
+          sleep 30
           terraform destroy -auto-approve
