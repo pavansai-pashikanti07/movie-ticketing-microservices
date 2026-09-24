@@ -1,0 +1,156 @@
+name: "Terraform Infrastructure Automation"
+
+on:
+  schedule:
+    # 00:20 UTC is 05:50 AM IST (Early Morning Auto-Recreate)
+    - cron: '20 0 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform Action to execute"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-south-2
+  TF_VERSION: "1.10.0"
+  WORKING_DIR: "infrastructure/terraform/env/dev"
+
+jobs:
+  terraform:
+    name: "Terraform ${{ github.event.inputs.action || 'Scheduled Apply' }}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
+
+      - name: Populate terraform.tfvars from Secret
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          TFVARS_CONTENT: ${{ secrets.TFVARS_DEV }}
+        run: |
+          printf '%s\n' "$TFVARS_CONTENT" > terraform.tfvars
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve || (echo "Retrying Terraform apply to resolve any transient cloud/helm timing..." && sleep 15 && terraform apply -auto-approve)
+
+      - name: Configure Kubeconfig & Deploy CinePass Manifests
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks
+          kubectl get nodes -o wide
+          
+          # Ensure External Secrets CRDs exist
+          kubectl apply --server-side -f https://raw.githubusercontent.com/external-secrets/external-secrets/main/deploy/crds/bundle.yaml || true
+          
+          # Deploy CinePass Microservices, Secrets & Ingress with retry
+          kubectl apply -k k8s/manifests || (sleep 10 && kubectl apply -k k8s/manifests)
+          
+          # Deploy Observability ServiceMonitors & Alert Rules with retry
+          kubectl apply -f k8s/monitoring/servicemonitors.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/servicemonitors.yaml)
+          kubectl apply -f k8s/monitoring/prometheus-rules.yaml || (sleep 10 && kubectl apply -f k8s/monitoring/prometheus-rules.yaml)
+          
+          echo "=== All Pods in cinepass-dev ==="
+          kubectl get pods -n cinepass-dev -o wide
+          echo "=== All Pods in monitoring ==="
+          kubectl get pods -n monitoring
+          echo "=== Cluster is 100% Ready for Interview! ==="
+
+      - name: Generate GitHub Step Summary
+        if: "${{ github.event_name == 'schedule' || github.event.inputs.action == 'apply' }}"
+        run: |
+          echo "Waiting up to 60s for ALB DNS to propagate..."
+          ALB_HOSTNAME=""
+          for i in {1..12}; do
+            ALB_HOSTNAME=$(kubectl get ingress cinepass-ingress -n cinepass-dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            if [ -n "$ALB_HOSTNAME" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # 🎬 CinePass Cloud Infrastructure & Services Summary
+
+          ### 🌐 Application & UI Access
+          * **Cinema Web UI**: [http://${ALB_HOSTNAME}](http://${ALB_HOSTNAME})
+          * **ALB Hostname**: \`${ALB_HOSTNAME:-"Provisioning in AWS..."}\`
+
+          ---
+
+          ### 🔑 Endpoints & Credentials
+          | Service | URL / Port / Access | Notes |
+          | :--- | :--- | :--- |
+          | **Frontend UI** | \`http://${ALB_HOSTNAME}/\` | Luxury Cinema Booking Portal |
+          | **Catalog API** | \`http://${ALB_HOSTNAME}/api/v1/catalog\` | Movies & Shows List |
+          | **Auth API** | \`http://${ALB_HOSTNAME}/api/v1/auth\` | User JWT Authentication |
+          | **Booking API** | \`http://${ALB_HOSTNAME}/api/v1/booking\` | Redis Atomic Seat Holds |
+          | **Payment API** | \`http://${ALB_HOSTNAME}/api/v1/payment\` | Ledger & SQS Events |
+          | **Grafana** | Port-forward: \`kubectl port-forward -n monitoring svc/prometheus-stack-grafana 3000:80\` | User: \`admin\` \| Pass: \`admin123\` |
+          | **Argo CD** | Port-forward: \`kubectl port-forward -n argocd svc/argo-cd-argocd-server 8080:443\` | User: \`admin\` |
+
+          ---
+
+          ### 📦 Kubernetes Workload Status
+          #### CinePass Microservices (\`cinepass-dev\`):
+          \`\`\`text
+          $(kubectl get pods -n cinepass-dev -o wide)
+          \`\`\`
+
+          #### Observability Stack (\`monitoring\`):
+          \`\`\`text
+          $(kubectl get pods -n monitoring)
+          \`\`\`
+
+          #### EKS Worker Nodes:
+          \`\`\`text
+          $(kubectl get nodes -o wide)
+          \`\`\`
+
+          ---
+          > 💡 **Quick Local Connection Command:**
+          > \`aws eks update-kubeconfig --region ap-south-2 --name cinepass-dev-eks\`
+          EOF
+
+      - name: Terraform Destroy
+        if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name cinepass-dev-eks || true
+          kubectl delete ingress cinepass-ingress -n cinepass-dev --ignore-not-found || true
+          kubectl delete namespace cinepass-dev --ignore-not-found || true
+          sleep 30
+          terraform destroy -auto-approve

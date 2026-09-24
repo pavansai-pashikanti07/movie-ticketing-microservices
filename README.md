@@ -1,6 +1,8 @@
 # 🎬 CinePass — Cloud-Native Movie Ticketing Platform
 
-> **Production-grade microservices architecture** built on AWS EKS, deployed via GitHub Actions OIDC, orchestrated with Kubernetes, and accessible via a full-stack web UI.
+> **Production-grade microservices architecture** built on AWS EKS, deployed via GitHub Actions OIDC + Argo CD GitOps, orchestrated with Kubernetes, and accessible via a full-stack web UI.
+>
+> 📖 **Architecture & Operations Guide:** For complete GitOps lifecycle, Argo CD access, and dual-mode delivery, see [GITOPS_ARCHITECTURE.md](GITOPS_ARCHITECTURE.md).
 
 ---
 

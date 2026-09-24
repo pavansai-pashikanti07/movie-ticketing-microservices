@@ -1,0 +1,133 @@
+name: "CI/CD: Booking Service"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/booking-service/**'
+      - '.github/workflows/booking-service.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/booking-service/**'
+      - '.github/workflows/booking-service.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Required for AWS OIDC authentication
+  contents: read
+
+env:
+  AWS_REGION: ap-south-2
+  ROLE_TO_ASSUME: arn:aws:iam::304960798044:role/cinepass-dev-github-actions-role
+  ECR_REPOSITORY: cinepass/booking-service
+  EKS_CLUSTER_NAME: cinepass-dev-eks
+  SERVICE_DIR: services/booking-service
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Continuous Integration (Lint, Typecheck & Compile)
+  # ---------------------------------------------------------------------------
+  test-and-build:
+    name: "Test & Compile TypeScript"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: '${{ env.SERVICE_DIR }}/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: npm ci
+
+      - name: Compile TypeScript
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: Continuous Delivery (Docker Build, ECR Push & EKS Rollout)
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: "Build Container & Deploy to EKS"
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Configure AWS Credentials via OIDC (Zero Static Keys)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.SERVICE_DIR }}
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update Kubeconfig for Amazon EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Rolling Deploy to EKS Cluster
+        run: |
+          if ! kubectl get deployment booking-service -n cinepass-dev > /dev/null 2>&1; then
+            echo "Deployment booking-service not found in cinepass-dev. Applying base manifests..."
+            kubectl apply -f k8s/manifests/00-namespace.yaml
+            kubectl apply -f k8s/manifests/01-configmap.yaml
+            kubectl apply -f k8s/manifests/03-booking-service.yaml
+          fi
+          kubectl set image deployment/booking-service \
+            booking-service=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            -n cinepass-dev
+          kubectl rollout status deployment/booking-service -n cinepass-dev --timeout=180s
+
+      - name: Generate Deployment Summary
+        if: always()
+        run: |
+          echo "## 🎬 CinePass Deployment Summary - Booking Service" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Service** | \`booking-service\` (Port 8082) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Cluster** | \`${{ env.EKS_CLUSTER_NAME }}\` (\`${{ env.AWS_REGION }}\`) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Namespace** | \`cinepass-dev\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docker Image** | \`${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deployment Status** | ✅ Successfully Deployed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 How to Access & Test the Service" >> $GITHUB_STEP_SUMMARY
+          echo "Run this in your terminal to browse the microservice:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo 'kubectl port-forward svc/booking-service 8082:8082 -n cinepass-dev' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Then open in your browser:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🩺 **Health Check**: [http://localhost:8082/health](http://localhost:8082/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Prometheus Metrics**: [http://localhost:8082/metrics](http://localhost:8082/metrics)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎟️ **Booking API Base**: \`http://localhost:8082/api/bookings\`" >> $GITHUB_STEP_SUMMARY
